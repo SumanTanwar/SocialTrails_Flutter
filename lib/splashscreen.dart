@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/signin.dart';
 import 'package:socialtrailsapp/signup.dart';
 
 class splashscreen extends StatefulWidget {
@@ -16,7 +17,7 @@ class _splashscreenState extends State<splashscreen> {
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>  const SignUpScreen()),
+        MaterialPageRoute(builder: (context) =>  const SigninScreen()),
       );
     });
   }

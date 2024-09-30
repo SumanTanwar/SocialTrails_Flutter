@@ -1,3 +1,5 @@
+import 'package:firebase_database/firebase_database.dart';
+
 class Users {
   String userId;
   String username;
@@ -56,6 +58,20 @@ class Users {
       admindeleted: json['admindeleted'],
       suspended: json['suspended'],
       isactive: json['isactive'],
+    );
+  }
+  factory Users.fromSnapshot(DataSnapshot snapshot) {
+    final data = snapshot.value as Map<dynamic, dynamic>;
+    return Users(
+      userId: data['userId'] ?? '',
+      username:  data['username'] ?? '',
+      email:  data['email'] ?? '',
+      roles:  data['roles'] ?? '',
+      profilepicture:  data['profilepicture'] ?? '',
+      admindeleted: data['admindeleted'] ?? false,
+      profiledeleted: data['profiledeleted'] ?? false,
+      suspended: data['suspended'] ?? false,
+
     );
   }
 }
