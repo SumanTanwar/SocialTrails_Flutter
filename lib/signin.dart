@@ -1,8 +1,12 @@
+import 'dart:ffi';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialtrailsapp/userdashboard.dart';
 import 'ModelData/Users.dart';
+import 'Utility/SessionManager.dart';
 import 'Utility/UserService.dart';
 import 'Utility/Utils.dart';
 
@@ -28,7 +32,7 @@ class _SigninScreenState extends State<SigninScreen> {
   }
   Future<void> _loadSavedCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? username = prefs.getString('username');
+    String? username = prefs.getString('remember_username');
 
     bool? rememberMe = prefs.getBool('remember_me');
 
@@ -47,11 +51,11 @@ class _SigninScreenState extends State<SigninScreen> {
     String password = _passwordController.text.trim();
     if (_rememberMe) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('username', email);
+      await prefs.setString('remember_username', email);
       await prefs.setBool('remember_me', true);
     } else {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('username');
+      await prefs.remove('remember_username');
       await prefs.remove('remember_me');
     }
     if (email.isEmpty) {
@@ -79,20 +83,37 @@ class _SigninScreenState extends State<SigninScreen> {
 
       if (user != null) {
         if (user.emailVerified) {
-          // Assuming userService.getUserByID is an asynchronous function.
           Users? data = await userService.getUserByID(user.uid);
+          if (data != null && data.userId != null) {
+            await SessionManager().loginUser(
+              data?.userId ?? "",
+              data?.username ?? "",
+              data?.email ?? "",
+              data?.notification ?? true,
+              data?.roles ?? "",
+            );
 
-          if (data?.suspended == true) {
-            Utils.showError(context,"Your account has been suspended by admin. Please contact support.");
-            await _auth.signOut();
-          } else {
-
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+            if (data?.suspended == true) {
+              Utils.showError(context,
+                  "Your account has been suspended by admin. Please contact support.");
+              await _auth.signOut();
+            } else {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => UserDashboardScreen()));
+            }
           }
-        } else {
-          Utils.showError(context,"Please verify your email before logging in.");
-          await _auth.signOut();
-        }
+          else
+            {
+              Utils.showError(
+                  context, "Something wrong! please try after some time.");
+              await _auth.signOut();
+            }
+          } else {
+            Utils.showError(
+                context, "Please verify your email before logging in.");
+            await _auth.signOut();
+          }
+
       }
       else
         {
@@ -105,18 +126,7 @@ class _SigninScreenState extends State<SigninScreen> {
       await _auth.signOut();
     }
 
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (userCredential.user != null) {
 
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
-      }
-    } catch (e) {
-      Utils.showError(context,"Invalid email or password");
-    }
 
   }
 
