@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/signin.dart';
 
 import 'Interface/OperationCallback.dart';
 import 'ModelData/UserRole.dart';
@@ -160,8 +161,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               TextButton(
                 onPressed: () {
-                  // Navigate to Sign In screen
-                  // Navigator.push(...);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SigninScreen()));
                 },
                 child: const Text("Got a profile? Sign in"),
               ),
