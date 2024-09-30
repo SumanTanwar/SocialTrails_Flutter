@@ -1,12 +1,15 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/splashscreen.dart';
+import 'package:socialtrailsapp/userdashboard.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await SessionManager().init();
   runApp(const MyApp());
 }
 
@@ -21,7 +24,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const splashscreen(),
+      home: SessionManager().isLoggedIn() ?  const UserDashboardScreen() : const splashscreen(),
     );
   }
 }
