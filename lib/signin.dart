@@ -9,6 +9,7 @@ import 'ModelData/Users.dart';
 import 'Utility/SessionManager.dart';
 import 'Utility/UserService.dart';
 import 'Utility/Utils.dart';
+import 'forgotpassword.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -177,7 +178,8 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // Implement Forgot Password logic here
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordView())); // Link to ForgotPasswordView
+
                     },
                     child: Text("Forgot password?", style: TextStyle(color: Colors.blue)),
                   ),
