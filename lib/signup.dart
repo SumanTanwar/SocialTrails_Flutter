@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/privacy_policy.dart';
 import 'package:socialtrailsapp/signin.dart';
 
 import 'Interface/OperationCallback.dart';
@@ -166,10 +168,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: const Text("Got a profile? Sign in"),
               ),
               const SizedBox(height: 20),
-              const Text(
-                "By registering, I acknowledge that I have read and accept the General Terms and conditions of Use and the privacy policy.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12),
+              RichText(
+                textAlign: TextAlign.left,
+                text: TextSpan(
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                  children: [
+                    TextSpan(
+                      text: "By registering, I acknowledge that I have read and accept the General Terms and Conditions of Use and the ",
+                    ),
+                    TextSpan(
+                      text: "privacy policy.",
+                      style: TextStyle(color: Colors.blue),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          // Navigate to the Privacy Policy page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => PrivacyPolicy()),
+                          );
+                        },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -177,7 +197,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
-
 // Helper method for text fields
   Widget _buildTextField(TextEditingController controller, String label, {TextInputType? keyboardType}) {
     return Padding(
