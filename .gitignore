@@ -46,3 +46,8 @@ app.*.map.json
 **/flutter/generated_plugin_registrant.*
 **/flutter/generated_plugins.*
 **/Flutter/GeneratedPluginRegistrant.*
+
+eval $(ssh-agent -s)
+eval $(ssh-agent -s).pub
+lib/Utility/firebase_options.dart
+
