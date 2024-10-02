@@ -90,6 +90,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Utils.showMessage(context,"User registered successfully. Please verify your email.");
             _auth.signOut();
 
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => SigninScreen()),
+            );
           },
           onFailure: (errMessage) {
             Utils.showError(context,errMessage);
