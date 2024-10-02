@@ -17,8 +17,16 @@ class SessionManager {
     _prefs ??= await SharedPreferences.getInstance();
   }
 
+  // Ensure initialization
+  Future<void> _ensureInitialized() async {
+    if (_prefs == null) {
+      await init();
+    }
+  }
+
   // Login user and save details
   Future<void> loginUser(String userID, String username, String email, bool notification, String roles) async {
+    await _ensureInitialized();
     await _prefs?.setString("userID", userID);
     await _prefs?.setString("username", username);
     await _prefs?.setString("email", email);
@@ -26,6 +34,8 @@ class SessionManager {
     await _prefs?.setBool("isLoggedIn", true);
     await _prefs?.setString("roleType", roles);
   }
+
+
 
   // Getters for user details
   String? getUserID() {
@@ -61,4 +71,15 @@ class SessionManager {
   Future<void> logoutUser() async {
     await _prefs?.clear();
   }
+
+  // Update user information
+  Future<void> updateUserInfo(String username, String email) async {
+    if (username.isNotEmpty) {
+      await _prefs?.setString("username", username);
+    }
+    if (email.isNotEmpty) {
+      await _prefs?.setString("email", email);
+    }
+  }
+
 }

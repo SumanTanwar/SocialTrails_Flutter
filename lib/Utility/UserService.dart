@@ -3,8 +3,7 @@ import 'package:socialtrailsapp/Interface/IUserInterface.dart';
 import '../Interface/OperationCallback.dart';
 import '../ModelData/Users.dart';
 
-
-class UserService extends IUserInterface{
+class UserService extends IUserInterface {
   final DatabaseReference reference;
   static const String _collectionName = "users";
 
@@ -13,12 +12,15 @@ class UserService extends IUserInterface{
   // Create a new user
   @override
   void createUser(Users user, OperationCallback callback) {
-    reference.child(_collectionName).child(user.userId).set(user.toJson()).then((_) {
+    reference.child(_collectionName).child(user.userId)
+        .set(user.toJson())
+        .then((_) {
       callback.onSuccess();
     }).catchError((error) {
       callback.onFailure(error.toString());
     });
   }
+
   @override
   Future<Users?> getUserByID(String uid) async {
     try {
@@ -35,6 +37,12 @@ class UserService extends IUserInterface{
     }
   }
 
+  Future<void> updateUser(Users user, OperationCallback callback) async {
+    try {
+      await reference.child(_collectionName).child(user.userId).update(user.toJson());
+      callback.onSuccess();
+    } catch (error) {
+      callback.onFailure(error.toString());
+    }
+  }
 }
-
-
