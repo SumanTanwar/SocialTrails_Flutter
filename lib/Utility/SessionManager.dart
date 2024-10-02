@@ -25,14 +25,16 @@ class SessionManager {
   }
 
   // Login user and save details
-  Future<void> loginUser(String userID, String username, String email, bool notification, String roles) async {
+  Future<void> loginUser(String userID, String username, String email,String bio, bool notification, String roles,) async {
     await _ensureInitialized();
     await _prefs?.setString("userID", userID);
     await _prefs?.setString("username", username);
     await _prefs?.setString("email", email);
+    await _prefs?.setString("bio", bio);
     await _prefs?.setBool("notification", notification);
     await _prefs?.setBool("isLoggedIn", true);
     await _prefs?.setString("roleType", roles);
+
   }
 
 
@@ -48,6 +50,11 @@ class SessionManager {
 
   String? getEmail() {
     return _prefs?.getString("email");
+  }
+
+
+  String? get bio {
+    return _prefs?.getString("bio");
   }
 
   bool getNotificationStatus() {
@@ -73,13 +80,16 @@ class SessionManager {
   }
 
   // Update user information
-  Future<void> updateUserInfo(String username, String email) async {
+  Future<void> updateUserInfo(String username, String email, String bio) async {
+    await _ensureInitialized(); // Ensure initialization
     if (username.isNotEmpty) {
       await _prefs?.setString("username", username);
     }
     if (email.isNotEmpty) {
       await _prefs?.setString("email", email);
     }
+    if (bio.isNotEmpty) {
+      await _prefs?.setString("bio", bio);
+    }
   }
-
 }

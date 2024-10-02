@@ -4,6 +4,7 @@ class Users {
   String userId;
   String username;
   String email;
+  String bio;
   String createdon;
   String profilepicture;
   String roles;
@@ -17,6 +18,7 @@ class Users {
     required this.userId,
     required this.username,
     required this.email,
+    required this.bio,
     required this.roles,
     this.createdon = '',
     this.profilepicture = '',
@@ -33,6 +35,7 @@ class Users {
       'userId': userId,
       'username': username,
       'email': email,
+      'bio': bio,
       'createdon': createdon,
       'profilepicture': profilepicture,
       'roles': roles,
@@ -50,6 +53,7 @@ class Users {
       userId: json['userId'],
       username: json['username'],
       email: json['email'],
+      bio: json['bio'],
       roles: json['roles'],
       createdon: json['createdon'],
       profilepicture: json['profilepicture'],
@@ -66,6 +70,7 @@ class Users {
       userId: data['userId'] ?? '',
       username:  data['username'] ?? '',
       email:  data['email'] ?? '',
+      bio: data['bio'] ?? '',
       roles:  data['roles'] ?? '',
       profilepicture:  data['profilepicture'] ?? '',
       admindeleted: data['admindeleted'] ?? false,

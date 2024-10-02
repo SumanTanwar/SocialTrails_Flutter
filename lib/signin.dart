@@ -88,12 +88,14 @@ class _SigninScreenState extends State<SigninScreen> {
           print("user data in  signin: $data?.notification");
           if (data != null && data.userId != null) {
             await SessionManager().loginUser(
-              data?.userId ?? "",
-              data?.username ?? "",
-              data?.email ?? "",
-              data?.notification ?? true,
-              data?.roles ?? "",
+              data.userId ?? "",
+              data.username ?? "",
+              data.email ?? "",
+              data.bio ?? "",  // Add this line
+              data.notification ?? true,
+              data.roles ?? "",
             );
+
 
             if (data?.suspended == true) {
               Utils.showError(context,

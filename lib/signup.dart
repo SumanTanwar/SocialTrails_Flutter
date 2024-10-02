@@ -28,6 +28,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
 
+  get bio => null;
+
 
   Future<void> _registerUser() async {
     String username = _usernameController.text.trim();
@@ -82,7 +84,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await currentUser.sendEmailVerification();
 
         String uid = currentUser.uid;
-        Users user = Users(userId: uid, username: username, email: email, roles: UserRole.user.getRole());
+        Users user = Users(userId: uid, username: username, email: email, bio: bio, roles: UserRole.user.getRole());
 
         // Create user in your database
         userService.createUser(user, OperationCallback(

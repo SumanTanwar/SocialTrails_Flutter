@@ -41,10 +41,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Reset Password'),
-        automaticallyImplyLeading: false,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: Column(
