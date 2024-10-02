@@ -85,6 +85,7 @@ class _SigninScreenState extends State<SigninScreen> {
       if (user != null) {
         if (user.emailVerified) {
           Users? data = await userService.getUserByID(user.uid);
+          print("user data in  signin: $data?.notification");
           if (data != null && data.userId != null) {
             await SessionManager().loginUser(
               data?.userId ?? "",

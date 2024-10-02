@@ -49,6 +49,64 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
   }
 
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete Account"),
+          content: Text("Are you sure you want to delete your account?"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("No"),
+            ),
+            TextButton(
+              onPressed: () async {
+                User? user = _auth.currentUser;
+
+                if (user != null) {
+                  String userId = SessionManager().getUserID() ?? '';
+                  _userService.deleteProfile(userId, OperationCallback(
+                    onSuccess: () async {
+                      try {
+                        // Delete the user from Firebase Auth
+                        await user.delete();
+                        // Clear credentials and log out
+                        Utils.saveCredentials("", false);
+                        SessionManager().logoutUser();
+                        await _auth.signOut();
+
+
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => SigninScreen()),
+                              (Route<dynamic> route) => false,
+                        );
+                        Utils.showMessage(context,"Account deleted....");
+
+                      } catch (e) {
+                        // Handle error during user deletion
+                        _showError("An error occurred while deleting your account. Please try again later.");
+                      }
+                    },
+                    onFailure: (errorMessage) {
+                      _showError(errorMessage);
+                    },
+                  ));
+                } else {
+                  _showError("User not found. Please log in again.");
+                }
+              },
+              child: Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,9 +211,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             Divider(thickness: 1, color: Colors.grey),
 
             GestureDetector(
-              onTap: () {
-                // Handle Delete Profile
-              },
+              onTap: _showDeleteAccountDialog, // Show delete account dialog
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
