@@ -27,7 +27,8 @@ class UserService extends IUserInterface {
       final data = await reference.child(_collectionName).child(uid).once();
 
       if (data.snapshot.exists) {
-        return Users.fromSnapshot(data.snapshot); // Implement fromSnapshot method in Users
+        return Users.fromSnapshot(
+            data.snapshot); // Implement fromSnapshot method in Users
       } else {
         return null; // User not found
       }
@@ -39,10 +40,22 @@ class UserService extends IUserInterface {
 
   Future<void> updateUser(Users user, OperationCallback callback) async {
     try {
-      await reference.child(_collectionName).child(user.userId).update(user.toJson());
+      await reference.child(_collectionName).child(user.userId).update(
+          user.toJson());
       callback.onSuccess();
     } catch (error) {
       callback.onFailure(error.toString());
     }
   }
+
+  void setNotification(String userID, bool isEnabled, OperationCallback callback) {
+    reference.child(_collectionName).child(userID).child("notification").set(isEnabled)
+        .then((_) {
+      callback.onSuccess();
+    }).catchError((error) {
+      callback.onFailure(error.toString());
+    });
+  }
 }
+
+

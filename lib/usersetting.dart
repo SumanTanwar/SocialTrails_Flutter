@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
+import 'Utility/Utils.dart';
+import 'changepassword.dart';
+import '../Interface/OperationCallback.dart';
 
 class UserSettingsScreen extends StatefulWidget {
   @override
@@ -13,19 +16,14 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
   late TextEditingController _usernameController;
   late bool _notificationsEnabled;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   final UserService _userService = UserService();
 
   @override
   void initState() {
-
     super.initState();
-
     _usernameController = TextEditingController(text: SessionManager().getUsername() ?? "User");
     _notificationsEnabled = SessionManager().getNotificationStatus();
   }
-
-
 
   void _logout() {
     SessionManager().logoutUser();
@@ -34,6 +32,21 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
       context,
       MaterialPageRoute(builder: (context) => SigninScreen()),
     );
+  }
+
+  void _navigateToChangePassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.red))));
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
   }
 
   @override
@@ -88,7 +101,25 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                     setState(() {
                       _notificationsEnabled = value;
                     });
-                    SessionManager().setNotificationStatus(value);
+
+                    String? userId = SessionManager().getUserID(); // Nullable String
+                    if (userId != null) {
+                      _userService.setNotification(userId, value, OperationCallback(
+                        onSuccess: () {
+                          SessionManager().setNotificationStatus(value);
+                          _showSuccess("Notifications turned ${value ? 'ON' : 'OFF'}");
+                        },
+                        onFailure: (errorMessage) {
+                          _showError("Failed to update notification status: $errorMessage");
+                          // Revert the switch if the operation fails
+                          setState(() {
+                            _notificationsEnabled = !value;
+                          });
+                        },
+                      ));
+                    } else {
+                      _showError("User ID not found. Please log in again.");
+                    }
                   },
                 ),
               ],
@@ -96,9 +127,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             Divider(thickness: 1, color: Colors.grey),
 
             GestureDetector(
-              onTap: () {
-                // Handle Change Password
-              },
+              onTap: _navigateToChangePassword,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
