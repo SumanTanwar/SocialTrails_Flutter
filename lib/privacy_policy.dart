@@ -4,9 +4,6 @@ class PrivacyPolicy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Privacy Policy'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(

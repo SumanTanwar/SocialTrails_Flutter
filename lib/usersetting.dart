@@ -6,6 +6,7 @@ import 'package:socialtrailsapp/signin.dart';
 import 'Utility/Utils.dart';
 import 'changepassword.dart';
 import '../Interface/OperationCallback.dart';
+import 'editprofile.dart';
 
 class UserSettingsScreen extends StatefulWidget {
   @override
@@ -72,13 +73,10 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                   _userService.deleteProfile(userId, OperationCallback(
                     onSuccess: () async {
                       try {
-                        // Delete the user from Firebase Auth
                         await user.delete();
-                        // Clear credentials and log out
                         Utils.saveCredentials("", false);
                         SessionManager().logoutUser();
                         await _auth.signOut();
-
 
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (context) => SigninScreen()),
@@ -87,7 +85,6 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                         Utils.showMessage(context,"Account deleted....");
 
                       } catch (e) {
-                        // Handle error during user deletion
                         _showError("An error occurred while deleting your account. Please try again later.");
                       }
                     },
@@ -110,7 +107,6 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("User Settings")),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -160,7 +156,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                       _notificationsEnabled = value;
                     });
 
-                    String? userId = SessionManager().getUserID(); // Nullable String
+                    String? userId = SessionManager().getUserID();
                     if (userId != null) {
                       _userService.setNotification(userId, value, OperationCallback(
                         onSuccess: () {
@@ -169,7 +165,6 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                         },
                         onFailure: (errorMessage) {
                           _showError("Failed to update notification status: $errorMessage");
-                          // Revert the switch if the operation fails
                           setState(() {
                             _notificationsEnabled = !value;
                           });
@@ -198,7 +193,24 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
 
             GestureDetector(
               onTap: () {
-                // Handle Edit Profile
+                User? user = _auth.currentUser;
+                if (user != null) {
+                  String name = user.displayName ?? '';
+                  String email = user.email ?? '';
+                  String bio = ""; // Replace with actual bio retrieval logic
+
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => EditProfileScreen(
+                        name: name,
+                        email: email,
+                        bio: bio,
+                      ),
+                    ),
+                  );
+                } else {
+                  _showError("User not found. Please log in again.");
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -208,10 +220,11 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                 ),
               ),
             ),
+
             Divider(thickness: 1, color: Colors.grey),
 
             GestureDetector(
-              onTap: _showDeleteAccountDialog, // Show delete account dialog
+              onTap: _showDeleteAccountDialog,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(

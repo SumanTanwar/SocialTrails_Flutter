@@ -163,16 +163,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               obscureText: !_confirmPasswordVisible,
             ),
             SizedBox(height: 20),
+Container(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: _changePassword,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.purple,
+      padding: const EdgeInsets.symmetric(horizontal: 125, vertical: 15),
+      textStyle: const TextStyle(fontSize: 16),
+    ),
+    child: const Text("Change Password", style: TextStyle(color: Colors.white)),
+  ),
+),
 
-            ElevatedButton(
-              onPressed: _changePassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                padding: const EdgeInsets.symmetric(horizontal: 125, vertical: 15),
-                textStyle: const TextStyle(fontSize: 16),
-              ),
-              child: const Text("Change Password", style: TextStyle(color: Colors.white)),
-            ),
             SizedBox(height: 10),
 
             TextButton(
