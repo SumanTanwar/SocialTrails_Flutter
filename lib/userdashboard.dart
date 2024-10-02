@@ -30,8 +30,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             ElevatedButton(
               onPressed: () {
                 // Retrieve user details
-                String? username = SessionManager().getUsername();
-                String? email = SessionManager().getEmail();
+                String? username = SessionManager().getUsername() as String?;
+                String? email = SessionManager().getEmail() as String?;
 
                 // Show a message with user details
                 ScaffoldMessenger.of(context).showSnackBar(
