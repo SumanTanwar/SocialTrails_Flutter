@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/splashscreen.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
+import 'package:socialtrailsapp/usersetting.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {

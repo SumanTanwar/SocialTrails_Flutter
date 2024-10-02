@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
+import 'package:socialtrailsapp/usersetting.dart';
 
 
 class UserDashboardScreen extends StatefulWidget {
@@ -42,11 +43,12 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             ElevatedButton(
               onPressed: () {
                 // Log out user
-                SessionManager().logoutUser();
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SigninScreen()));
+
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserSettingsScreen()));
               },
-              child: Text('Log Out'),
+              child: Text('User Profile'),
             ),
+
           ],
         ),
       ),
