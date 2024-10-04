@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/createpost.dart';
 import 'package:socialtrailsapp/signin.dart';
 import 'package:socialtrailsapp/usersetting.dart';
 
@@ -13,7 +15,7 @@ class UserDashboardScreen extends StatefulWidget {
 
 class _UserDashboardScreenState extends State<UserDashboardScreen> {
   int _selectedIndex = 0;
-
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -48,7 +50,22 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               },
               child: Text('User Profile'),
             ),
+            ElevatedButton(
+              onPressed: () {
+                // Log out user
 
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CreatePostScreen()));
+              },
+              child: Text('Create Post'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _auth.signOut();
+             SessionManager().logoutUser();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SigninScreen()));
+              },
+              child: Text('Logout'),
+            ),
           ],
         ),
       ),

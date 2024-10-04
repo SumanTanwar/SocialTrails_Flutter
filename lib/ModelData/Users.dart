@@ -1,10 +1,13 @@
 import 'package:firebase_database/firebase_database.dart';
 
+import '../Utility/Utils.dart';
+
+
 class Users {
   String userId;
   String username;
   String email;
-  String bio;
+  String? bio;
   String createdon;
   String profilepicture;
   String roles;
@@ -18,16 +21,16 @@ class Users {
     required this.userId,
     required this.username,
     required this.email,
-    required this.bio,
     required this.roles,
-    this.createdon = '',
+    String? createdon,
+    String? bio,
     this.profilepicture = '',
     this.profiledeleted = false,
     this.notification = true,
     this.admindeleted = false,
     this.suspended = false,
     this.isactive = true,
-  });
+  }) : createdon = createdon ?? Utils.getCurrentDatetime();
 
   // Convert a Users object into a Map
   Map<String, dynamic> toJson() {
@@ -35,7 +38,6 @@ class Users {
       'userId': userId,
       'username': username,
       'email': email,
-      'bio': bio,
       'createdon': createdon,
       'profilepicture': profilepicture,
       'roles': roles,
@@ -64,19 +66,20 @@ class Users {
       isactive: json['isactive'],
     );
   }
+
   factory Users.fromSnapshot(DataSnapshot snapshot) {
     final data = snapshot.value as Map<dynamic, dynamic>;
     return Users(
       userId: data['userId'] ?? '',
-      username:  data['username'] ?? '',
-      email:  data['email'] ?? '',
+      username: data['username'] ?? '',
+      email: data['email'] ?? '',
       bio: data['bio'] ?? '',
-      roles:  data['roles'] ?? '',
-      profilepicture:  data['profilepicture'] ?? '',
+      roles: data['roles'] ?? '',
+      createdon: data['createdon'] ?? Utils.getCurrentDatetime(),
+      profilepicture: data['profilepicture'] ?? '',
       admindeleted: data['admindeleted'] ?? false,
       profiledeleted: data['profiledeleted'] ?? false,
       suspended: data['suspended'] ?? false,
-
     );
   }
 }
