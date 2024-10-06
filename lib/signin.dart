@@ -1,7 +1,6 @@
-import 'dart:ffi';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/AdminPanel/AdminDashboard.dart';
 import 'package:socialtrailsapp/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
@@ -31,10 +30,10 @@ class _SigninScreenState extends State<SigninScreen> {
     super.initState();
     _loadSavedCredentials();
   }
+
   Future<void> _loadSavedCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? username = prefs.getString('remember_username');
-
     bool? rememberMe = prefs.getBool('remember_me');
 
     if (rememberMe == true) {
@@ -45,11 +44,10 @@ class _SigninScreenState extends State<SigninScreen> {
     }
   }
 
-
-  void _validateuser() async{
-
+  void _validateUser() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
+
     if (_rememberMe) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('remember_username', email);
@@ -59,18 +57,19 @@ class _SigninScreenState extends State<SigninScreen> {
       await prefs.remove('remember_username');
       await prefs.remove('remember_me');
     }
+
     if (email.isEmpty) {
-      Utils.showError(context,"Email address is required");
+      Utils.showError(context, "Email address is required");
       return;
     } else if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(email)) {
-      Utils.showError(context,"Invalid email address");
+      Utils.showError(context, "Invalid email address");
       return;
     }
     if (password.isEmpty || password.length < 8) {
-      Utils.showError(context,"Password must be at least 8 characters long");
+      Utils.showError(context, "Password must be at least 8 characters long");
       return;
-    }  else if (!Utils.isValidPassword(password)) {
-      Utils.showError(context,"Password must contain at least one letter and one digit.");
+    } else if (!Utils.isValidPassword(password)) {
+      Utils.showError(context, "Password must contain at least one letter and one digit.");
       return;
     }
 
@@ -83,66 +82,64 @@ class _SigninScreenState extends State<SigninScreen> {
       User? user = userCredential.user;
 
       if (user != null) {
-        if (user.emailVerified) {
-          Users? data = await userService.getUserByID(user.uid);
-          print("user data in  signin: $data?.notification");
-          if (data != null && data.userId != null) {
-            await SessionManager().loginUser(
-              data.userId ?? "",
-              data.username ?? "",
-              data.email ?? "",
-              data.bio ?? "",  // Add this line
-              data.notification ?? true,
-              data.roles ?? "",
-            );
+        // Check if the user is an admin
+        if (email.toLowerCase() == "socialtrails2024@gmail.com") {
+          // Admin logged in directly
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+          );
+        } else {
+          // For regular users, check email verification
+          if (user.emailVerified) {
+            Users? data = await userService.getUserByID(user.uid);
+            if (data != null && data.userId != null) {
+              await SessionManager().loginUser(
+                data.userId ?? "",
+                data.username ?? "",
+                data.email ?? "",
+                data.bio ?? "",
+                data.notification ?? true,
+                data.roles ?? "",
+              );
 
-
-            if (data?.suspended == true) {
-              Utils.showError(context,
-                  "Your account has been suspended by admin. Please contact support.");
-              await _auth.signOut();
+              if (data?.suspended == true) {
+                Utils.showError(context, "Your account has been suspended by admin. Please contact support.");
+                await _auth.signOut();
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserDashboardScreen()),
+                );
+              }
             } else {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => UserDashboardScreen()));
-            }
-          }
-          else
-            {
-              Utils.showError(
-                  context, "Something wrong! please try after some time.");
+              Utils.showError(context, "Something went wrong! Please try again.");
               await _auth.signOut();
             }
           } else {
-            Utils.showError(
-                context, "Please verify your email before logging in.");
+            // Ask for email verification for regular users
+            Utils.showError(context, "Please verify your email before logging in.");
             await _auth.signOut();
           }
-
-      }
-      else
-        {
-          Utils.showError(context,"Invalid email address and password");
-          await _auth.signOut();
         }
+      } else {
+        Utils.showError(context, "Invalid email address and password");
+        await _auth.signOut();
+      }
     } catch (e) {
       _passwordController.clear();
-      Utils.showError(context,"Invalid email address and password");
+      Utils.showError(context, "Invalid email address and password");
       await _auth.signOut();
     }
-
-
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView( // Add this widget
+      body: SingleChildScrollView(
         child: Padding(
-
           padding: const EdgeInsets.all(16.0),
           child: Column(
-
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: 70),
@@ -151,18 +148,15 @@ class _SigninScreenState extends State<SigninScreen> {
               Text(
                 "Discover new experiences, share moments, and stay updated with the latest news from those who matter most.",
                 textAlign: TextAlign.left,
-                style: TextStyle(color: Colors.purple, fontSize: 12, fontWeight: FontWeight.bold ),
+                style: TextStyle(color: Colors.purple, fontSize: 12, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 30),
-
               _buildTextField(_emailController, "Email Address", keyboardType: TextInputType.emailAddress),
               _buildPasswordField(_passwordController, "Password", _passwordVisible, (value) {
                 setState(() {
                   _passwordVisible = value;
                 });
               }),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -181,19 +175,17 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordView())); // Link to ForgotPasswordView
-
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordView()));
                     },
                     child: Text("Forgot password?", style: TextStyle(color: Colors.blue)),
                   ),
                 ],
               ),
-
               const SizedBox(height: 5),
               Container(
-                width: double.infinity, // Make it full width
+                width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _validateuser,
+                  onPressed: _validateUser,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple,
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -220,6 +212,7 @@ class _SigninScreenState extends State<SigninScreen> {
       ),
     );
   }
+
   // Helper method for text fields
   Widget _buildTextField(TextEditingController controller, String label, {TextInputType? keyboardType}) {
     return Padding(
@@ -242,7 +235,7 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 
-// Helper method for password fields
+  // Helper method for password fields
   Widget _buildPasswordField(TextEditingController controller, String label, bool passwordVisible, Function(bool) onToggle) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
