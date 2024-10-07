@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
 
+import 'adminusermanage.dart';
+
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
 
@@ -33,6 +35,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 );
               },
               child: Text('Show Admin Details'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminUserDetailManageScreen(userId : "gZbKw6pfnCOrcYTG6kjUbd5nveA2")),
+                );
+              },
+              child: Text('User Detail  Page'),
             ),
             ElevatedButton(
               onPressed: () {

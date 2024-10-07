@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:socialtrailsapp/Interface/IUserInterface.dart';
 import '../Interface/OperationCallback.dart';
 import '../ModelData/Users.dart';
+import 'Utils.dart';
 
 class UserService extends IUserInterface {
   final DatabaseReference reference;
@@ -26,16 +27,20 @@ class UserService extends IUserInterface {
   Future<Users?> getUserByID(String uid) async {
     try {
       final data = await reference.child(_collectionName).child(uid).once();
-
       if (data.snapshot.exists) {
-        return Users.fromSnapshot(
-            data.snapshot); // Implement fromSnapshot method in Users
+        Users user = Users.fromSnapshot(data.snapshot);
+        if (!user.admindeleted && !user.profiledeleted) {
+          return user; // User is valid
+        } else {
+          print("User is deleted by admin or profile is deleted.");
+          return null;
+        }
       } else {
-        return null; // User not found
+        return null;
       }
     } catch (error) {
       print("Error retrieving user: $error");
-      return null; // Handle the error as needed
+      return null;
     }
   }
 
@@ -81,6 +86,62 @@ class UserService extends IUserInterface {
       }
     });
   }
-}
+  @override
+  Future<Users?> adminGetUserByID(String uid) async {
+    try {
+      final data = await reference.child(_collectionName).child(uid).once();
 
+      if (data.snapshot.exists) {
+        return Users.fromSnapshot(
+            data.snapshot);
+      } else {
+        return null;
+      }
+    } catch (error) {
+      print("Error retrieving user: $error");
+      return null;
+    }
+  }
+  @override
+  void suspendProfile(String userId, String suspendedBy, String reason, OperationCallback callback) {
+    Map<String, dynamic> updates = {
+      'suspended': true,
+      'suspendedby': suspendedBy,
+      'suspendedreason': reason,
+      'suspendedon': Utils.getCurrentDatetime(), // You may need to implement this method
+      'isActive': false,
+    };
+
+    reference.child(_collectionName).child(userId).update(updates).then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
+  @override
+  void activateProfile(String userId, OperationCallback callback) {
+    Map<String, dynamic> updates = {
+      'suspended': false,
+      'suspendedby': null,
+      'suspendedreason': null,
+      'suspendedon': null,
+      'isActive': true,
+    };
+
+    reference.child(_collectionName).child(userId).update(updates).then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
+
+}
 

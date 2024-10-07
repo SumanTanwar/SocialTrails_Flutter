@@ -16,6 +16,7 @@ class Users {
   bool admindeleted;
   bool suspended;
   bool isactive;
+  String? suspendedreason,suspendedby;
 
   Users({
     required this.userId,
