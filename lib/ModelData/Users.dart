@@ -91,4 +91,15 @@ class Users {
 
     );
   }
+
+  factory Users.fromMap(String id, Map<dynamic, dynamic> data) {
+    return Users(
+      userId: id,
+      username: data['username'] ?? '',
+      email: data['email'] ?? '',
+      admindeleted: data['admindeleted'] ?? false,
+      profiledeleted: data['profiledeleted'] ?? false, roles: '',
+    );
+  }
+
 }
