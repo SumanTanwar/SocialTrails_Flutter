@@ -10,13 +10,18 @@ class UserPost {
   bool? flagged;
   bool? moderationStatus;
   List<Uri> imageUris;
-
+  double? latitude;
+  double? longitude;
+  String? location;
 
   UserPost({
     this.postId,
     required this.userId,
     required this.captionText,
     required this.imageUris,
+    required this.location,
+    required this.longitude,
+    required this.latitude,
   })  : createdOn = Utils.getCurrentDatetime(),
         postDeleted = false;
 
@@ -26,7 +31,10 @@ class UserPost {
       'userId': userId,
       'captionText': captionText,
       'createdOn': createdOn,
-      'postDeleted': postDeleted
+      'postDeleted': postDeleted,
+      'location': location,
+      'latitude': latitude,
+      'longitude': longitude
     };
   }
 }

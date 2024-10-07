@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:socialtrailsapp/userdashboard.dart';
 
 import 'Interface/OperationCallback.dart';
 import 'ModelData/UserPost.dart';
+import 'Utility/LocationPicker.dart';
 import 'Utility/SessionManager.dart';
 import 'Utility/UserPostService.dart';
 import 'Utility/Utils.dart';
@@ -18,7 +21,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   List<XFile>? _imageFiles = [];
   final TextEditingController _captionController = TextEditingController();
   final UserPostService _userPostService = UserPostService();
-
+    String _selectedLocation = "Tag Location";
+    double? _latitude,_longitude;
   Future<void> _pickImage() async {
     final List<XFile>? selectedImages = await _picker.pickMultiImage();
     if (selectedImages != null) {
@@ -33,11 +37,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _imageFiles?.removeAt(index);
     });
   }
+  Future<void> _checkLocationPermission() async {
+    var status = await Permission.location.status;
+    if (!status.isGranted) {
+      await Permission.location.request();
+    }
+  }
+  void _showLocationPicker() async {
+    await _checkLocationPermission();
+    final selectedLocation = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => LocationPicker(),
+    );
+
+    if (selectedLocation != null) {
+      setState(() {
+        print("selected location in create post : ${ selectedLocation['address']}" );
+        _selectedLocation = selectedLocation['address']; // Get the address
+        double latitude = selectedLocation['latitude'];
+        double longitude = selectedLocation['longitude'];
+        // Save latitude and longitude for posting
+        _latitude = latitude; // Assuming you have _latitude and _longitude variables
+        _longitude = longitude;
+      });
+    }
+  }
 
   void _sharePost() {
     String caption = _captionController.text.trim();
     if (caption.isEmpty) {
       Utils.showError(context, "Caption cannot be empty.");
+      return;
+    }
+    if (_selectedLocation.isEmpty || _selectedLocation == "Tag Location")
+    {
+      Utils.showError(context, "Please tag the location.");
       return;
     }
     if (_imageFiles!.isEmpty) {
@@ -56,11 +90,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       userId: userId,
       captionText: caption,
       imageUris: imageUris,
+      location: _selectedLocation,
+      longitude: _longitude,
+      latitude: _latitude
     );
 
     _userPostService.createPost(userPost, OperationCallback(
       onSuccess: () {
         Utils.showMessage(context, "Post created successfully!");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => UserDashboardScreen()), // Replace with your DashboardPage widget
+        );
       },
       onFailure: (error) {
         Utils.showError(context, error.toString());
@@ -118,19 +159,34 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               Divider(color: Colors.grey[600]),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 30),
-                  SizedBox(width: 10),
-                  Text(
-                    "Tag Location",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                      fontStyle: FontStyle.italic,
+                  GestureDetector(
+                    onTap: _showLocationPicker,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        'assets/location.png',
+                        width: 30,
+                        height: 30,
+                      ),
                     ),
                   ),
+
+                  Expanded(
+                    child: Text(
+                      _selectedLocation,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
                 ],
               ),
-              SizedBox(height: 10),
+
               Divider(color: Colors.grey[600]),
               Container(
                 margin: EdgeInsets.only(top: 18),
