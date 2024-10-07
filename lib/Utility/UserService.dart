@@ -184,5 +184,23 @@ class UserService extends IUserInterface {
 
   }
 
+  Future<List<Users>> getRegularUserList() async {
+    List<Users> userList = [];
+    final snapshot = await reference.child(_collectionName).once();
+
+    if (snapshot.snapshot.exists) {
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+      data.forEach((key, value) {
+        userList.add(Users.fromMap(key, value));
+      });
+      print("Users loaded: ${userList.length}"); // Debug print
+    } else {
+      print("No users found");
+    }
+
+    return userList;
+  }
+
+
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
 
+import 'adminuserlist.dart';
 import 'adminusermanage.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -44,6 +45,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 );
               },
               child: Text('User Detail  Page'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Log out admin
+                SessionManager().logoutUser();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminUserListScreen()),
+                );
+              },
+              child: Text('User list'),
             ),
             ElevatedButton(
               onPressed: () {
