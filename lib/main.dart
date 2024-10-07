@@ -3,10 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Adminpanel/adminchangepassword.dart';
 import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
+import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/splashscreen.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
 import 'package:socialtrailsapp/usersetting.dart';
+import 'AdminPanel/AdminDashboard.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -27,7 +29,20 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: SessionManager().isLoggedIn() ?  const UserDashboardScreen() : AdminChangePasswordScreen(),
+      home: _getHomeWidget(),
     );
+  }
+  Widget _getHomeWidget() {
+
+    if (SessionManager().isLoggedIn()) {
+      String userRole = SessionManager().getRoleType().toString();
+      if (userRole == UserRole.admin.getRole()) {
+        return const AdminDashboardScreen();
+      } else {
+        return const UserDashboardScreen();
+      }
+    } else {
+      return const splashscreen();
+    }
   }
 }

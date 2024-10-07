@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/AdminPanel/AdminDashboard.dart';
+import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
@@ -85,6 +86,14 @@ class _SigninScreenState extends State<SigninScreen> {
         // Check if the user is an admin
         if (email.toLowerCase() == "socialtrails2024@gmail.com") {
           // Admin logged in directly
+          await SessionManager().loginUser(
+           user.uid ?? "",
+           "Admin" ?? "",
+           "socialtrails2024@gmail.com" ?? "",
+            "" ?? "",
+            false,
+            UserRole.admin.getRole() ?? "",
+          );
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),

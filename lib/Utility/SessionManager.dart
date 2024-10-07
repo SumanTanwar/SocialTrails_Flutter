@@ -75,9 +75,18 @@ class SessionManager {
   }
 
   // Logout user
-  Future<void> logoutUser() async {
-    await _prefs?.clear();
-  }
+  // Future<void> logoutUser() async {
+  //   await _prefs?.clear();
+  // }
+   Future<void> logoutUser() async {
+     await _prefs?.remove("userID");
+     await _prefs?.remove("username");
+     await _prefs?.remove("email");
+     await _prefs?.remove("bio");
+     await _prefs?.remove("notification");
+     await _prefs?.remove("roleType");
+     await _prefs?.setBool("isLoggedIn", false);
+   }
 
   // Update user information
   Future<void> updateUserInfo(String username, String email, String bio) async {
