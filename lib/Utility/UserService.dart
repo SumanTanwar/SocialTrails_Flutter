@@ -109,7 +109,7 @@ class UserService extends IUserInterface {
       'suspendedby': suspendedBy,
       'suspendedreason': reason,
       'suspendedon': Utils.getCurrentDatetime(), // You may need to implement this method
-      'isActive': false,
+      'isactive': false,
     };
 
     reference.child(_collectionName).child(userId).update(updates).then((_) {
@@ -129,7 +129,7 @@ class UserService extends IUserInterface {
       'suspendedby': null,
       'suspendedreason': null,
       'suspendedon': null,
-      'isActive': true,
+      'isactive': true,
     };
 
     reference.child(_collectionName).child(userId).update(updates).then((_) {
