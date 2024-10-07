@@ -53,9 +53,11 @@ class SessionManager {
   }
 
 
-  String? get bio {
+  String? getBio() {
     return _prefs?.getString("bio");
   }
+
+
 
   bool getNotificationStatus() {
     return _prefs?.getBool("notification") ?? false;
@@ -78,6 +80,7 @@ class SessionManager {
   // Future<void> logoutUser() async {
   //   await _prefs?.clear();
   // }
+
    Future<void> logoutUser() async {
      await _prefs?.remove("userID");
      await _prefs?.remove("username");

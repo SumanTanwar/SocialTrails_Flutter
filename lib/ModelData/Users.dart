@@ -42,6 +42,7 @@ class Users {
       'username': username,
       'email': email,
       'createdon': createdon,
+      'bio': bio,
       'profilepicture': profilepicture,
       'roles': roles,
       'profiledeleted': profiledeleted,

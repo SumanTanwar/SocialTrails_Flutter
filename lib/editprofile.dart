@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/viewprofile.dart';
 import 'usersetting.dart'; // Adjust the import according to your structure
 
 class EditProfileScreen extends StatefulWidget {
@@ -57,11 +58,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       SessionManager().updateUserInfo(name, email, bio); // Update the session manager
       _showSuccess("Profile updated successfully.");
 
+      int postsCount = 0;
+      int followersCount = 0;
+      int followingsCount = 0;
+
       // Redirect to user detail page with new values
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => UserSettingsScreen(),
+          builder: (context) => ViewProfileScreen(
+            username: name,
+            email: email,
+            bio: bio,
+            postsCount: postsCount,
+            followersCount: followersCount,
+            followingsCount: followingsCount,),
         ),
       );
     } catch (error) {

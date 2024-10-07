@@ -179,5 +179,10 @@ class UserService extends IUserInterface {
     });
   }
 
+  @override
+  void updateUserInfo(String username, String email, String bio) {
+
+  }
+
 }
 
