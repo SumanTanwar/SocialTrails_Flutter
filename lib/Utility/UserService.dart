@@ -142,6 +142,42 @@ class UserService extends IUserInterface {
       }
     });
   }
+  @override
+  void adminDeleteProfile(String userId, OperationCallback callback) {
+    Map<String, dynamic> updates = {
+      "admindeleted": true,
+      "admindeletedon": Utils.getCurrentDatetime(),
+      "isactive": false,
+    };
+
+    reference.child(_collectionName).child(userId).update(updates).then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
+  @override
+  void adminUnDeleteProfile(String userId, OperationCallback callback) {
+    Map<String, dynamic> updates = {
+      "admindeleted": false,
+      "admindeletedon": null,
+      "isactive": true,
+    };
+
+    reference.child(_collectionName).child(userId).update(updates).then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
 
 }
 

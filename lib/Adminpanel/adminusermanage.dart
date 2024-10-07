@@ -18,7 +18,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   Users? user;
   bool isLoading = true;
   final UserService userService = UserService();
-
+  String deleteProfileStatus = "";
   @override
   void initState() {
     super.initState();
@@ -27,6 +27,11 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
 
   Future<void> _fetchUserDetails() async {
     user = await userService.adminGetUserByID(widget.userId);
+    print("suspend ${user?.suspendedreason}");
+    if(user?.admindeleted == true)
+      {
+        deleteProfileStatus = "Deleted profile by admin on :  ${user?.admindeletedon}";
+      }
     setState(() {
       isLoading = false;
     });
@@ -104,7 +109,32 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   }
 
   void _deleteProfile(String userId) {
-    // Implement delete functionality
+    userService.adminDeleteProfile(userId, OperationCallback(
+      onSuccess: () {
+        setState(() {
+          user?.admindeleted = true;
+          deleteProfileStatus = "Deleted profile by admin on :  ${Utils.getCurrentDatetime()}";
+        });
+        Utils.showMessage(context, "profile deleted successfully done.");
+      },
+      onFailure: (errMessage) {
+        Utils.showError(context, "delete profile failed! Please try again later.");
+      },
+    ));
+  }
+  void _undeleteProfile(String userId) {
+    userService.adminUnDeleteProfile(userId, OperationCallback(
+      onSuccess: () {
+        setState(() {
+          user?.admindeleted = false;
+          deleteProfileStatus = "";
+        });
+        Utils.showMessage(context, "profile activate  successfully done.");
+      },
+      onFailure: (errMessage) {
+        Utils.showError(context, "activate profile failed! Please try again later.");
+      },
+    ));
   }
 
   @override
@@ -158,14 +188,30 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
               UserDetailText(label: user?.bio ?? ''),
               UserDetailText(label: user?.email ?? ''),
               SizedBox(height: 5),
+            if (user?.profiledeleted == true) ...[
               UserDetailText(
-                label: user?.suspendedreason ?? '',
+                label: "user has deleted own profile.",
+                isVisible: true,
+                textColor: Colors.white,
+                backgroundColor: Colors.red[300]!,
+              )
+              ]
+              else ...[
+              UserDetailText(
+                label:  "Suspended profile: ${user?.suspendedreason}",
                 isVisible: user?.suspended ?? false,
                 textColor: user?.suspended == true ? Colors.white : Colors.black,
                 backgroundColor: user?.suspended == true ? Color(0xFFFF9800) : Colors.transparent,
               ),
               SizedBox(height: 5),
-              UserDetailText(label: 'Delete reason (if any)', isVisible: user?.admindeleted ?? false),
+              UserDetailText(
+                label: deleteProfileStatus,
+                isVisible: user?.admindeleted ?? false,
+                textColor: user?.admindeleted == true ? Colors.white : Colors.black,
+                backgroundColor: user?.admindeleted == true ? Colors.red[300]! : Colors.transparent,
+              ),
+],
+    if (user?.profiledeleted == false) ...[
               Row(
                 children: [
                   Padding(
@@ -183,11 +229,12 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                     width: 150,
                     child: ProfileButton(
                       label: user?.admindeleted == true ? 'Activate Profile' : 'Delete Profile',
-                      onPressed: user?.admindeleted == true ? () => _deleteProfile(widget.userId) : () => _deleteProfile(widget.userId),
+                      onPressed: user?.admindeleted == true ? () => _undeleteProfile(widget.userId) : () => _deleteProfile(widget.userId),
                     ),
                   ),
                 ],
               ),
+    ]
             ],
           ),
         ),

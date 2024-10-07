@@ -16,7 +16,7 @@ class Users {
   bool admindeleted;
   bool suspended;
   bool isactive;
-  String? suspendedreason,suspendedby;
+  String? suspendedreason,suspendedby,admindeletedon;
 
   Users({
     required this.userId,
@@ -31,6 +31,8 @@ class Users {
     this.admindeleted = false,
     this.suspended = false,
     this.isactive = true,
+    this.suspendedreason,
+    this.admindeletedon,
   }) : createdon = createdon ?? Utils.getCurrentDatetime();
 
   // Convert a Users object into a Map
@@ -65,6 +67,8 @@ class Users {
       admindeleted: json['admindeleted'],
       suspended: json['suspended'],
       isactive: json['isactive'],
+      suspendedreason: json['suspendedreason'],
+      admindeletedon: json['admindeletedon'],
     );
   }
 
@@ -81,6 +85,9 @@ class Users {
       admindeleted: data['admindeleted'] ?? false,
       profiledeleted: data['profiledeleted'] ?? false,
       suspended: data['suspended'] ?? false,
+      suspendedreason: data['suspendedreason'] ?? '',
+      admindeletedon: data['admindeletedon'] ?? Utils.getCurrentDatetime(),
+
     );
   }
 }
