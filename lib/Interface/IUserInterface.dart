@@ -9,4 +9,6 @@ abstract class IUserInterface {
   Future<Users?> adminGetUserByID(String uid);
   void suspendProfile(String userId, String suspendedBy, String reason, OperationCallback callback);
   void activateProfile(String userId, OperationCallback callback);
+  void adminDeleteProfile(String userId, OperationCallback callback);
+  void adminUnDeleteProfile(String userId, OperationCallback callback);
 }
