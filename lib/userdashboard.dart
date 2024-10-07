@@ -4,6 +4,7 @@ import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/createpost.dart';
 import 'package:socialtrailsapp/signin.dart';
 import 'package:socialtrailsapp/usersetting.dart';
+import 'package:socialtrailsapp/viewprofile.dart';
 
 
 class UserDashboardScreen extends StatefulWidget {
@@ -16,11 +17,34 @@ class UserDashboardScreen extends StatefulWidget {
 class _UserDashboardScreenState extends State<UserDashboardScreen> {
   int _selectedIndex = 0;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String? username;
+  String? email;
+  String? bio;
+  int postsCount = 0;
+  int followersCount = 0;
+  int followingsCount = 0;
+
+  // get username => null;
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
+
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  void _fetchUserData() {
+    username = SessionManager().getUsername();
+    email = SessionManager().getEmail();
+    bio = SessionManager().getBio();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +73,24 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserSettingsScreen()));
               },
               child: Text('User Profile'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewProfileScreen(
+                      username: username ?? 'Guest',
+                      bio: bio ?? 'No bio available',
+                      email: email ?? '',
+                      postsCount: postsCount,
+                      followersCount: followersCount,
+                      followingsCount: followingsCount,
+                    ),
+                  ),
+                );
+              },
+              child: Text('View Profile'),
             ),
             ElevatedButton(
               onPressed: () {

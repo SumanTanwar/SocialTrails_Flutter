@@ -11,4 +11,5 @@ abstract class IUserInterface {
   void activateProfile(String userId, OperationCallback callback);
   void adminDeleteProfile(String userId, OperationCallback callback);
   void adminUnDeleteProfile(String userId, OperationCallback callback);
+  void updateUserInfo(String username, String email, String bio);
 }
