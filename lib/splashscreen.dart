@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:socialtrailsapp/AdminPanel/AdminDashboard.dart';
 import 'package:socialtrailsapp/signin.dart';
-import 'package:socialtrailsapp/Utility/SessionManager.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:socialtrailsapp/signup.dart';
 
 class splashscreen extends StatefulWidget {
   const splashscreen({super.key});
@@ -12,45 +10,17 @@ class splashscreen extends StatefulWidget {
 }
 
 class _splashscreenState extends State<splashscreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   @override
   void initState() {
     super.initState();
 
-    Future.delayed(const Duration(seconds: 3), () async {
-      final sessionManager = SessionManager();
-      await sessionManager.init(); // Ensure SharedPreferences is initialized
-
-      bool isLoggedIn = sessionManager.isLoggedIn();
-      String? roleType = sessionManager.getRoleType();
-
-      if (isLoggedIn) {
-        // Get current user
-        User? user = _auth.currentUser;
-
-        // Check if user is admin and if their email is verified
-        if (roleType == 'admin' && user != null && user.emailVerified) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-          );
-        } else {
-          // If not admin or email not verified, redirect to SignInScreen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const SigninScreen()),
-          );
-        }
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SigninScreen()),
-        );
-      }
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>  const SigninScreen()),
+      );
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,4 +53,3 @@ class _splashscreenState extends State<splashscreen> {
     );
   }
 }
-
