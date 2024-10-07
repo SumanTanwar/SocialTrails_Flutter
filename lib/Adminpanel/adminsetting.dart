@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialtrailsapp/Adminpanel/adminchangepassword.dart';
+import 'package:socialtrailsapp/Adminpanel/createmoderator.dart';
 import 'package:socialtrailsapp/signin.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
@@ -58,7 +59,7 @@ class AdminSettingsScreen extends StatelessWidget {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => AdminChangePasswordScreen()),
+                  MaterialPageRoute(builder: (context) => AdminCreateModeratorPage()),
                 );
               },
               child: Padding(
