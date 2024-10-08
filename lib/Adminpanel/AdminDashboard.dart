@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:socialtrailsapp/Adminpanel/adminmoeratorlist.dart';
-import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
 
-import 'adminuserlist.dart';
-import 'adminusermanage.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -17,81 +13,37 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
+    String username = "Admin";
+    String? email = SessionManager().getEmail();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Dashboard'),
+        title: Text(''),
         centerTitle: true,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                // Retrieve admin details
-                String username = "Admin";
-                String? email = SessionManager().getEmail();
-
-                // Show a message with admin details
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Admin: $username, Email: $email')),
-                );
-              },
-              child: Text('Show Admin Details'),
+            Text(
+              'Admin Details',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminUserDetailManageScreen(userId : "gZbKw6pfnCOrcYTG6kjUbd5nveA2")),
-                );
-              },
-              child: Text('User Detail  Page'),
+            SizedBox(height: 20),
+            Text(
+              'Admin: $username',
+              style: TextStyle(fontSize: 18),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Log out admin
-                SessionManager().logoutUser();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminUserListScreen()),
-                );
-              },
-              child: Text('User list'),
+            Text(
+              'Email: ${email ?? "No email available"}',
+              style: TextStyle(fontSize: 18),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Log out admin
-                SessionManager().logoutUser();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminSettingsScreen()),
-                );
-              },
-              child: Text('Admin setting'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-              // Log out admin
+            ElevatedButton(onPressed: (){
               SessionManager().logoutUser();
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => AdminModeratorListScreen()),
+                MaterialPageRoute(builder: (context) => SigninScreen()),
               );
-            },
-            child: Text('Moderator List'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Log out admin
-                SessionManager().logoutUser();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => SigninScreen()),
-                );
-              },
-              child: Text('Log Out'),
-            ),
+            }, child: Text('logout'))
           ],
         ),
       ),
