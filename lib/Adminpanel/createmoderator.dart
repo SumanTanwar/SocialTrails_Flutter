@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:socialtrailsapp/Adminpanel/adminmoeratorlist.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/signin.dart';
@@ -56,7 +57,7 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
                 _clearInputs();
                 _auth.signOut();
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => SigninScreen()),
+                  MaterialPageRoute(builder: (context) => AdminModeratorListScreen()),
                 );
               },
               onFailure: (error) {

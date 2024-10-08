@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/Adminpanel/adminmoeratorlist.dart';
 import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
@@ -68,6 +69,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 );
               },
               child: Text('Admin setting'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+              // Log out admin
+              SessionManager().logoutUser();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => AdminModeratorListScreen()),
+              );
+            },
+            child: Text('Moderator List'),
             ),
             ElevatedButton(
               onPressed: () {

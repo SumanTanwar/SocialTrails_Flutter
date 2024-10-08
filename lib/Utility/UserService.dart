@@ -5,13 +5,15 @@ import '../Interface/OperationCallback.dart';
 import '../ModelData/Users.dart';
 import 'Utils.dart';
 
+
+
 class UserService extends IUserInterface {
   final DatabaseReference reference;
   static const String _collectionName = "users";
 
   UserService() : reference = FirebaseDatabase.instance.ref();
 
-  // Create a new user
+
   @override
   void createUser(Users user, OperationCallback callback) {
     reference.child(_collectionName).child(user.userId)
@@ -108,7 +110,7 @@ class UserService extends IUserInterface {
       'suspended': true,
       'suspendedby': suspendedBy,
       'suspendedreason': reason,
-      'suspendedon': Utils.getCurrentDatetime(), // You may need to implement this method
+      'suspendedon': Utils.getCurrentDatetime(),
       'isActive': false,
     };
 
@@ -201,6 +203,28 @@ class UserService extends IUserInterface {
     return userList;
   }
 
+  // Method to fetch moderators
+  Future<List<Users>> getModeratorList() async {
+    List<Users> moderatorsList = [];
+    final snapshot = await reference.child(_collectionName).once();
 
+    if (snapshot.snapshot.exists) {
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+      data.forEach((key, value) {
+        if (value['roles'] == 'moderator') { // Filter for moderators
+          moderatorsList.add(Users.fromMap(key, value));
+        }
+      });
+      print("Moderators loaded: ${moderatorsList.length}"); // Debug print
+    } else {
+      print("No moderators found");
+    }
+
+    return moderatorsList;
+  }
 }
+
+
+
+
 
