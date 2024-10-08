@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:socialtrailsapp/Interface/IUserInterface.dart';
 import '../Interface/OperationCallback.dart';
@@ -9,9 +12,44 @@ import 'Utils.dart';
 
 class UserService extends IUserInterface {
   final DatabaseReference reference;
+  final FirebaseStorage storage;
   static const String _collectionName = "users";
 
-  UserService() : reference = FirebaseDatabase.instance.ref();
+  UserService()
+      : reference = FirebaseDatabase.instance.ref(),
+        storage = FirebaseStorage.instance; // Initialize storage
+
+  // Upload image and return the URL
+  Future<String?> uploadProfileImage(String userId, File imageFile) async {
+    try {
+      // Create a unique filename for the image
+      String filePath = 'userprofile/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      UploadTask uploadTask = storage.ref(filePath).putFile(imageFile);
+
+      // Wait for the upload to complete
+      TaskSnapshot snapshot = await uploadTask;
+
+      // Get the download URL
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print("Error uploading image: $e");
+      return null;
+    }
+  }
+  // New method to update user profile with image URL
+  Future<void> updateUserProfileImage(String userId, File imageFile, OperationCallback callback) async {
+    String? imageUrl = await uploadProfileImage(userId, imageFile);
+    if (imageUrl != null) {
+      Map<String, dynamic> updates = {
+        'userprofile': imageUrl,
+      };
+      await reference.child(_collectionName).child(userId).update(updates);
+      callback.onSuccess();
+    } else {
+      callback.onFailure("Failed to upload image.");
+    }
+  }
 
 
   @override
@@ -110,7 +148,7 @@ class UserService extends IUserInterface {
       'suspended': true,
       'suspendedby': suspendedBy,
       'suspendedreason': reason,
- 
+
       'suspendedon': Utils.getCurrentDatetime(),
       'isActive': false,
 
