@@ -88,14 +88,7 @@ class ViewProfileScreen extends StatelessWidget {
             ),
 
 
-            Expanded(
-              child: ListView.builder(
-                itemCount: 5, // Replace with your actual post data
-                itemBuilder: (context, index) {
-                  return ListTile(title: Text('Post $index'));
-                },
-              ),
-            ),
+
           ],
         ),
       ),
