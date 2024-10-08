@@ -1,15 +1,99 @@
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:socialtrailsapp/Adminpanel/adminchangepassword.dart';
+import 'package:socialtrailsapp/AdminPanel/adminuserlist.dart';
 import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
 import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/createpost.dart';
 import 'package:socialtrailsapp/splashscreen.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
 import 'package:socialtrailsapp/usersetting.dart';
 import 'AdminPanel/AdminDashboard.dart';
 import 'firebase_options.dart';
+
+class BottomNavigation extends StatelessWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const BottomNavigation({
+    Key? key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.search),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.add_sharp),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: '',
+        ),
+      ],
+      currentIndex: currentIndex,
+      onTap: onTap,
+      type: BottomNavigationBarType.fixed,
+    );
+  }
+}
+
+class AdminBottomNavigation extends StatelessWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const AdminBottomNavigation({
+    Key? key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.people),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.error),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.warning),
+          label: '',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: '',
+        ),
+      ],
+      currentIndex: currentIndex,
+      onTap: onTap,
+      type: BottomNavigationBarType.fixed,
+    );
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,20 +113,75 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.purple,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: _getHomeWidget(),
+      home: const HomeScreen(),
     );
   }
-  Widget _getHomeWidget() {
+}
 
-    if (SessionManager().isLoggedIn()) {
-      String userRole = SessionManager().getRoleType().toString();
-      if (userRole == UserRole.admin.getRole()) {
-        return const AdminDashboardScreen();
-      } else {
-        return const UserDashboardScreen();
-      }
-    } else {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+  late final String userRole;
+  bool isLoggedIn = false;
+
+  final List<Widget> _userScreens = [
+    UserDashboardScreen(),
+    UserDashboardScreen(),
+    CreatePostScreen(),
+    UserDashboardScreen(),
+    UserSettingsScreen(),
+  ];
+
+  final List<Widget> _adminScreens = [
+    AdminDashboardScreen(),
+    AdminUserListScreen(),
+    AdminDashboardScreen(),
+    AdminDashboardScreen(),
+    AdminSettingsScreen()
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    isLoggedIn = SessionManager().isLoggedIn();
+    userRole = SessionManager().getRoleType().toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isLoggedIn) {
       return const splashscreen();
     }
+
+    List<Widget> screens = userRole == UserRole.admin.getRole() ? _adminScreens : _userScreens;
+
+    return Scaffold(
+      body: screens[_currentIndex],
+      bottomNavigationBar: userRole == UserRole.admin.getRole()
+          ? AdminBottomNavigation(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      )
+          : BottomNavigation(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
+    );
   }
 }
+
+

@@ -1,15 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:socialtrailsapp/AdminPanel/AdminDashboard.dart';
 import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socialtrailsapp/userdashboard.dart';
 import 'ModelData/Users.dart';
 import 'Utility/SessionManager.dart';
 import 'Utility/UserService.dart';
 import 'Utility/Utils.dart';
 import 'forgotpassword.dart';
+import 'main.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -96,7 +95,7 @@ class _SigninScreenState extends State<SigninScreen> {
           );
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else {
           // For regular users, check email verification
@@ -118,7 +117,7 @@ class _SigninScreenState extends State<SigninScreen> {
               } else {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => UserDashboardScreen()),
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
                 );
               }
             } else {
