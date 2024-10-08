@@ -88,7 +88,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     UserPost userPost = UserPost(
       userId: userId,
-      captionText: caption,
+      captiontext: caption,
       imageUris: imageUris,
       location: _selectedLocation,
       longitude: _longitude,
