@@ -106,6 +106,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String? imageUrl = SessionManager().getImageUrl();
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -120,7 +121,9 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage('assets/user.png'),
+                    backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                        ? NetworkImage(imageUrl) // Use NetworkImage for URL
+                        : AssetImage('assets/user.png') as ImageProvider, // Default image
                   ),
                   SizedBox(width: 12),
                   Text(

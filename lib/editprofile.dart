@@ -28,11 +28,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final ImagePicker _picker = ImagePicker();
   XFile? _imageFile;
 
+
+  // Variable to hold the image URL
+  String? _imageUrl;
+
   @override
   void initState() {
     super.initState();
     _nameController.text = widget.name;
     _bioController.text = widget.bio;
+    _imageUrl = SessionManager().getImageUrl();
   }
 
   void _updateProfile() async {
@@ -41,7 +46,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (user != null) {
       String newName = _nameController.text.trim();
       String newBio = _bioController.text.trim();
-      String imageUrl = '';
+      String imageUrl = _imageUrl ?? '';
 
       // Upload image to Firebase Storage if an image is selected
       if (_imageFile != null) {
@@ -121,7 +126,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           CircleAvatar(
             radius: 40.0,
             backgroundImage: _imageFile == null
-                ? AssetImage('assets/user.png')
+                ? (_imageUrl != null && _imageUrl!.isNotEmpty
+                ? NetworkImage(_imageUrl!)
+                : AssetImage('assets/user.png')) // Use NetworkImage if URL exists
                 : FileImage(File(_imageFile!.path)) as ImageProvider,
           ),
           Positioned(
@@ -185,11 +192,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() {
       _imageFile = pickedFile;
     });
-    Navigator.pop(context); // Close the bottom sheet after picking an image
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    String? imageUrl = SessionManager().getImageUrl();
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(12.0),

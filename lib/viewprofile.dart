@@ -10,6 +10,7 @@ class ViewProfileScreen extends StatelessWidget {
   final int followersCount;
   final int followingsCount;
 
+
   ViewProfileScreen({
     required this.username,
     required this.bio,
@@ -21,6 +22,7 @@ class ViewProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? imageUrl = SessionManager().getImageUrl();
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.fromLTRB(12.0,50.0,12.0,10.0),
@@ -33,7 +35,9 @@ class ViewProfileScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundImage: AssetImage('assets/user.png'), // Replace with your asset
+                      backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                          ? NetworkImage(imageUrl) // Use NetworkImage for URL
+                          : AssetImage('assets/user.png') as ImageProvider, // Default image
                     ),
                     SizedBox(height: 5),
                     Text(
