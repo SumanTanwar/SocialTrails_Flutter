@@ -204,11 +204,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
 
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(
-                        name: name,
-                        email: email,
-                        bio: bio,
-                      ),
+                      builder: (context) => EditProfileScreen(),
                     ),
                   );
                 } else {

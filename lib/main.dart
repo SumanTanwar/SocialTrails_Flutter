@@ -8,6 +8,7 @@ import 'package:socialtrailsapp/createpost.dart';
 import 'package:socialtrailsapp/splashscreen.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
 import 'package:socialtrailsapp/usersetting.dart';
+import 'package:socialtrailsapp/viewprofile.dart';
 import 'AdminPanel/AdminDashboard.dart';
 import 'firebase_options.dart';
 
@@ -134,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
     UserDashboardScreen(),
     UserDashboardScreen(),
     CreatePostScreen(),
-    UserDashboardScreen(),
+    ViewProfileScreen(),
     UserSettingsScreen(),
   ];
 
