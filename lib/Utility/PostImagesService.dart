@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'dart:math';
 
+import '../Interface/DataOperationCallback.dart';
 import '../Interface/IPostImagesInterface.dart';
 import '../Interface/OperationCallback.dart';
 import '../ModelData/PostImages.dart';
@@ -31,7 +32,7 @@ class PostImagesService implements IPostImagesInterface {
       callback.onFailure(e.toString());
     }
   }
-
+  @override
   Future<void> uploadImages(String postId, List<Uri> imageUris, OperationCallback callback) async {
     List<Future> uploadTasks = [];
 
@@ -74,6 +75,35 @@ class PostImagesService implements IPostImagesInterface {
     await Future.wait(uploadTasks);
     callback.onSuccess();
   }
+  @override
+  Future<void> getAllPhotosByPostId(String postId, DataOperationCallback<List<String>> callback) async {
+    reference.child(_collectionName).orderByChild('postId').equalTo(postId).onValue.listen((event) {
+      final List<Map<String, dynamic>> imagesWithOrder = [];
+
+      final data = event.snapshot.value as Map<dynamic, dynamic>?; // Casting to Map
+      if (data != null) {
+        data.forEach((key, value) {
+          // Assuming the value is a Map representing PostImages
+          imagesWithOrder.add({
+            'imagePath': value['imagePath'] as String,
+            'order': value['order'] as int,
+          });
+        });
+      }
+
+      // Sort by the 'order' field
+      imagesWithOrder.sort((a, b) => a['order'].compareTo(b['order']));
+
+      // Extract the image paths in order
+      final List<String> imagePaths = imagesWithOrder.map((image) => image['imagePath'] as String).toList();
+      print("imge path ${imagePaths.length}");
+      callback.onSuccess(imagePaths);
+    }, onError: (error) {
+      callback.onFailure(error.toString());
+    });
+  }
+
+
   String _generateUUID() {
     return '${_randomString(8)}-${_randomString(4)}-${_randomString(4)}-${_randomString(4)}-${_randomString(12)}';
   }

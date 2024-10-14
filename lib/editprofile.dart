@@ -5,15 +5,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/Utility/Utils.dart';
 import 'package:socialtrailsapp/viewprofile.dart';
 import 'usersetting.dart'; // Adjust the import according to your structure
 
 class EditProfileScreen extends StatefulWidget {
-  final String name;
-  final String email;
-  final String bio;
-
-  EditProfileScreen({required this.name, required this.email, required this.bio});
 
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
@@ -35,8 +31,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.name;
-    _bioController.text = widget.bio;
+    _nameController.text = SessionManager().getUsername().toString();
+    _bioController.text =  SessionManager().getEmail().toString();
     _imageUrl = SessionManager().getImageUrl();
   }
 
@@ -56,9 +52,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // Update profile display name and other user data
       try {
         await user.updateProfile(displayName: newName);
-        await _updateUserDataInDatabase(newName, widget.email, newBio, imageUrl);
+        await _updateUserDataInDatabase(newName, newBio, imageUrl);
       } catch (error) {
-        _showError("Failed to update profile: $error");
+        Utils.showError(context, "Failed to update profile: $error");
       }
     }
   }
@@ -79,45 +75,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return downloadUrl;
   }
 
-  Future<void> _updateUserDataInDatabase(String name, String email, String bio, String imageUrl) async {
-    String userId = _auth.currentUser?.uid ?? '';
-    try {
-      await _database.child("users").child(userId).update({
-        'username': name,
-        'email': email, // Keep the email unchanged
-        'bio': bio,
-        'profile_image': imageUrl, // Save the profile image URL
-      });
-
-      await SessionManager().updateUserInfo(name, email, bio, imageUrl); // Update the session manager
-      _showSuccess("Profile updated successfully.");
-
-      // Redirect to user detail page with new values
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ViewProfileScreen(
-            username: name,
-            email: email,
-            bio: bio,
-            postsCount: 0,
-            followersCount: 0,
-            followingsCount: 0,
-          ),
-        ),
-      );
-    } catch (error) {
-      _showError("Failed to update user data in database: $error");
-    }
+  Future<void> _updateUserDataInDatabase(String name, String bio, String imageUrl) async {
+    // String userId = _auth.currentUser?.uid ?? '';
+    // try {
+    //   await _database.child("users").child(userId).update({
+    //     'username': name,
+    //     'email': email, // Keep the email unchanged
+    //     'bio': bio,
+    //     'profile_image': imageUrl, // Save the profile image URL
+    //   });
+    //
+    //   await SessionManager().updateUserInfo(name, email, bio, imageUrl); // Update the session manager
+    //   _showSuccess("Profile updated successfully.");
+    //
+    //   // Redirect to user detail page with new values
+    //   Navigator.pushReplacement(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (context) => ViewProfileScreen(),
+    //     ),
+    //   );
+    // } catch (error) {
+    //   _showError("Failed to update user data in database: $error");
+    // }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.red))));
-  }
 
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
-  }
 
   Widget _imageProfile() {
     return Center(
@@ -219,7 +202,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             // Display email but not editable
             TextField(
-              controller: TextEditingController(text: widget.email),
+              controller: TextEditingController(text: SessionManager().getEmail().toString()),
               decoration: InputDecoration(labelText: "Email"),
               enabled: false,
             ),

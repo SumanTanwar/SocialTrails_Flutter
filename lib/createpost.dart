@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
+import 'package:socialtrailsapp/viewprofile.dart';
 
 import 'Interface/OperationCallback.dart';
 import 'ModelData/UserPost.dart';
@@ -100,7 +101,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         Utils.showMessage(context, "Post created successfully!");
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => UserDashboardScreen()), // Replace with your DashboardPage widget
+          MaterialPageRoute(builder: (context) => ViewProfileScreen()), // Replace with your DashboardPage widget
         );
       },
       onFailure: (error) {

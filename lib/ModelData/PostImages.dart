@@ -19,4 +19,12 @@ class PostImages {
       'order': order,
     };
   }
+  factory PostImages.fromJson(Map<String, dynamic> json) {
+    return PostImages(
+      imageId: json['imageId'] as String?,
+      postId: json['postId'] as String,
+      imagePath: json['imagePath'] as String,
+      order: json['order'] as int,
+    );
+  }
 }
