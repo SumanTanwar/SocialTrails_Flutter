@@ -118,12 +118,13 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Create New Moderator")),
+     // appBar: AppBar(title: Text("Create New Moderator")),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            SizedBox(height:90),
             Image.asset('assets/socialtrails_logo.png', width: 150, height: 150),
             SizedBox(height: 20),
             TextField(

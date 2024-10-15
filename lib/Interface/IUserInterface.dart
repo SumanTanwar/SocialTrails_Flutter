@@ -15,5 +15,6 @@ abstract class IUserInterface {
   void adminDeleteProfile(String userId, OperationCallback callback);
   void adminUnDeleteProfile(String userId, OperationCallback callback);
   Future<String?>  uploadProfileImage(String userId, File imageFile, DataOperationCallback<String> callback);
-
+  void deleteUserProfile(String userId, OperationCallback callback);
+  void unDeleteUserProfile(String userId, OperationCallback callback);
 }

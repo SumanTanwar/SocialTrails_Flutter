@@ -38,9 +38,9 @@ class Utils {
         SnackBar(content: Text(message)));
   }
 
-  static Future<void> saveCredentials(String email, bool rememberMe) async {
+  static Future<void> removeRememberCredentials() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', email);
-    await prefs.setBool('rememberMe', rememberMe);
+    await prefs.remove('remember_username');
+    await prefs.remove('remember_me');
   }
 }

@@ -11,7 +11,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _showAlert = false;
   String _alertMessage = '';
-  bool _navigateToSignIn = false;
 
   void _resetPassword() async {
     String email = _emailController.text.trim();
@@ -23,9 +22,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       _showAlertDialog("Check your email to reset your password");
-      setState(() {
-        _navigateToSignIn = true;
-      });
     } catch (e) {
       _showAlertDialog("Failed to send reset email: ${e.toString()}");
     }
@@ -41,21 +37,18 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(30.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/socialtrails_logo.png', // Adjust the asset path
+              'assets/socialtrails_logo.png',
               width: 200,
               height: 200,
             ),
             SizedBox(height: 40),
-            Text(
-              "Reset Password",
-              style: TextStyle(fontSize: 24),
-            ),
+            Text("Reset Password", style: TextStyle(fontSize: 24)),
             SizedBox(height: 20),
             Text(
               "Enter your email address to receive a link to reset your password",
@@ -66,21 +59,27 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
-                hintText: 'Email',
-                fillColor: Colors.grey[200],
-                filled: true,
+                labelText: "Email",
+               // fillColor: Colors.grey[200],
+               // filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.purple),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Colors.purple, width: 2),
                 ),
               ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _resetPassword,
-              child: Text("Reset"),
+              child: Text("Reset", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.purple,
-                minimumSize: Size(double.infinity, 0), // Set to fill the width
+                padding: EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.purple,
+                minimumSize: Size(double.infinity, 0),
               ),
             ),
             SizedBox(height: 20),
@@ -90,33 +89,18 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               },
               child: Text("Back to Login", style: TextStyle(color: Colors.blue)),
             ),
-            Spacer(),
+            if (_showAlert)
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  _alertMessage,
+                  style: TextStyle(color: Colors.purple),
+                ),
+              ),
           ],
         ),
       ),
-      // Show alert dialog if needed
-      floatingActionButton: _showAlert
-          ? FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _showAlert = false;
-          });
-        },
-        child: Icon(Icons.close),
-        backgroundColor: Colors.red,
-      )
-          : null,
-      // Alert dialog for messages
-      bottomSheet: _showAlert
-          ? Container(
-        color: Colors.white,
-        padding: EdgeInsets.all(20),
-        child: Text(
-          _alertMessage,
-          style: TextStyle(color: Colors.black),
-        ),
-      )
-          : null,
     );
   }
 }

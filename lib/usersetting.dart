@@ -42,13 +42,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
     );
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.red))));
-  }
 
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
-  }
 
   void _showDeleteAccountDialog() {
     showDialog(
@@ -70,30 +64,35 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
 
                 if (user != null) {
                   String userId = SessionManager().getUserID() ?? '';
-                  _userService.deleteProfile(userId, OperationCallback(
+
+                  // First delete user profile from database
+                  _userService.deleteUserProfile(userId, OperationCallback(
                     onSuccess: () async {
+                      // After successful profile deletion, delete from Firebase Auth
                       try {
-                        await user.delete();
-                        Utils.saveCredentials("", false);
+                        await user.delete(); // Delete the user from Firebase Auth
+                       Utils.showMessage(context, "Account deleted successfully.");
+
+                        // Clear credentials and log out
+                        Utils.removeRememberCredentials();
                         SessionManager().logoutUser();
-                        await _auth.signOut();
+                        _auth.signOut();
 
-                        Navigator.of(context).pushAndRemoveUntil(
+                        // Navigate to Sign In screen
+                        Navigator.pushReplacement(
+                          context,
                           MaterialPageRoute(builder: (context) => SigninScreen()),
-                              (Route<dynamic> route) => false,
                         );
-                        Utils.showMessage(context,"Account deleted....");
-
                       } catch (e) {
-                        _showError("An error occurred while deleting your account. Please try again later.");
+                        Utils.showError(context, "Failed to delete account from Firebase Auth: ${e.toString()}");
                       }
                     },
                     onFailure: (errorMessage) {
-                      _showError(errorMessage);
+                      Utils.showError(context, "Failed to delete account: $errorMessage");
                     },
                   ));
                 } else {
-                  _showError("User not found. Please log in again.");
+                  Utils.showError(context, "User not found. Please log in again.");
                 }
               },
               child: Text("Yes"),
@@ -103,6 +102,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -164,17 +164,17 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                       _userService.setNotification(userId, value, OperationCallback(
                         onSuccess: () {
                           SessionManager().setNotificationStatus(value);
-                          _showSuccess("Notifications turned ${value ? 'ON' : 'OFF'}");
+                          Utils.showMessage(context, "Notifications turned ${value ? 'ON' : 'OFF'}");
                         },
                         onFailure: (errorMessage) {
-                          _showError("Failed to update notification status: $errorMessage");
+                          Utils.showError(context, "Failed to update notification status: $errorMessage");
                           setState(() {
                             _notificationsEnabled = !value;
                           });
                         },
                       ));
                     } else {
-                      _showError("User ID not found. Please log in again.");
+                      Utils.showError(context, "User ID not found. Please log in again.");
                     }
                   },
                 ),
@@ -198,17 +198,13 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
               onTap: () {
                 User? user = _auth.currentUser;
                 if (user != null) {
-                  String name = user.displayName ?? '';
-                  String email = user.email ?? '';
-                  String bio = ""; // Replace with actual bio retrieval logic
-
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
                       builder: (context) => EditProfileScreen(),
                     ),
                   );
                 } else {
-                  _showError("User not found. Please log in again.");
+                  Utils.showError(context, "User not found. Please log in again.");
                 }
               },
               child: Padding(

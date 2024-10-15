@@ -192,7 +192,7 @@ class UserService extends IUserInterface {
     if (snapshot.snapshot.exists) {
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       data.forEach((key, value) {
-        if (value['roles'] == 'moderator') {
+        if (value['roles'] == 'moderator' && value['profiledeleted'] == false) {
           moderatorsList.add(Users.fromMap(key, value));
         }
       });
@@ -236,6 +236,35 @@ class UserService extends IUserInterface {
     };
 
     reference.child(_collectionName).child(userId).update(updates).then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
+
+  @override
+  void deleteUserProfile(String userId, OperationCallback callback) {
+
+    reference.child(_collectionName).child(userId).child("profiledeleted").set(true)
+  .then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
+  @override
+  void unDeleteUserProfile(String userId, OperationCallback callback) {
+
+    reference.child(_collectionName).child(userId).child("profiledeleted").set(false)
+  .then((_) {
       if (callback != null) {
         callback.onSuccess();
       }
