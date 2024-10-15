@@ -123,7 +123,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   crossAxisCount: 3, // Adjust as needed
                   childAspectRatio: 1,
                 // crossAxisSpacing: 1,
-                  mainAxisSpacing: 8,
+                 // mainAxisSpacing: 8,
                 ),
                 itemCount: _postImages.length,
                 itemBuilder: (context, index) {

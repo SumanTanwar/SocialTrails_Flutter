@@ -95,11 +95,18 @@ class Users {
 
   factory Users.fromMap(String id, Map<dynamic, dynamic> data) {
     return Users(
-      userId: id,
+      userId: data['userId'] ?? '',
       username: data['username'] ?? '',
       email: data['email'] ?? '',
+      bio: data['bio'] ?? '',
+      roles: data['roles'] ?? '',
+      createdon: data['createdon'] ?? Utils.getCurrentDatetime(),
+      profilepicture: data['profilepicture'] ?? '',
       admindeleted: data['admindeleted'] ?? false,
-      profiledeleted: data['profiledeleted'] ?? false, roles: '',
+      profiledeleted: data['profiledeleted'] ?? false,
+      suspended: data['suspended'] ?? false,
+      suspendedreason: data['suspendedreason'] ?? '',
+      admindeletedon: data['admindeletedon'] ?? Utils.getCurrentDatetime(),
     );
   }
 

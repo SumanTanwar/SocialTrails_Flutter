@@ -3,6 +3,9 @@ import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/ModelData/Users.dart';
+import '../Interface/DataOperationCallback.dart';
+import '../ModelData/UserPost.dart';
+import '../Utility/UserPostService.dart';
 import '../Utility/Utils.dart';
 
 class AdminUserDetailManageScreen extends StatefulWidget {
@@ -19,6 +22,8 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   bool isLoading = true;
   final UserService userService = UserService();
   String deleteProfileStatus = "";
+  List<String> _postImages = [];
+  int postsCount = 0;
   @override
   void initState() {
     super.initState();
@@ -27,7 +32,8 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
 
   Future<void> _fetchUserDetails() async {
     user = await userService.adminGetUserByID(widget.userId);
-    print("suspend ${user?.suspendedreason}");
+
+    _fetchUserPosts(widget.userId);
     if(user?.admindeleted == true)
       {
         deleteProfileStatus = "Deleted profile by admin on :  ${user?.admindeletedon}";
@@ -36,7 +42,35 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
       isLoading = false;
     });
   }
+  Future<void> _fetchUserPosts(String userId) async {
+    print("function call");
+    // Get the user ID
+    UserPostService userPostService = UserPostService();
+    print("uuserid : $userId");
 
+    await userPostService.getAllUserPost(userId, DataOperationCallback<List<UserPost>>(
+      onSuccess: (posts) {
+
+        //print("posts count : $count");
+        setState(() {
+
+          _postImages = posts
+              .map((post) => (post.uploadedImageUris?.isNotEmpty == true)
+              ? post.uploadedImageUris![0]
+              : null)
+              .where((image) => image != null)
+              .cast<String>()
+              .toList();
+
+          postsCount = _postImages.length;
+        });
+      },
+      onFailure: (error) {
+        // Handle error
+        print("Failed to fetch posts: $error");
+      },
+    ));
+  }
   void _showSuspendDialog() {
     final reasonController = TextEditingController();
 
@@ -139,6 +173,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -152,32 +187,22 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: AssetImage('assets/user.png'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage: (user?.profilepicture != null && user!.profilepicture.isNotEmpty)
+                            ? NetworkImage(user!.profilepicture)
+                            : AssetImage('assets/user.png') as ImageProvider,
                       ),
                       SizedBox(height: 5),
                       Text(
                         user?.username ?? 'Unknown User',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   SizedBox(width: 15),
-                  ProfileStat(count: '0', label: 'Posts'),
+                  ProfileStat(count: postsCount.toString(), label: 'Posts'),
                   SizedBox(width: 15),
                   ProfileStat(count: '0', label: 'Followers'),
                   SizedBox(width: 15),
@@ -234,7 +259,34 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                   ),
                 ],
               ),
-    ]
+    ],
+              SizedBox(height: 10),
+              _postImages.isNotEmpty
+                  ? Expanded(
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3, // Adjust as needed
+                    childAspectRatio: 1,
+                    // crossAxisSpacing: 1,
+                    //mainAxisSpacing: 8,
+                  ),
+                  itemCount: _postImages.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        //borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey, width: 1),
+                        image: DecorationImage(
+                          image: NetworkImage(_postImages[index].toString()),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
+                  : SizedBox(),
+
             ],
           ),
         ),
@@ -286,7 +338,7 @@ class UserDetailText extends StatelessWidget {
         ? Container(
       color: backgroundColor,
       alignment: Alignment.centerLeft,
-      padding: EdgeInsets.only(left: 30),
+      padding: EdgeInsets.only(left: 10),
       child: Text(
         label,
         style: TextStyle(fontSize: 12, color: textColor),

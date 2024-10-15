@@ -28,7 +28,23 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
       print("Error loading users: $error");
     });
   }
+  Color getStatusColor(Users user) {
+    if (user.profiledeleted || user.admindeleted) {
+      return Colors.red;
+    } else if (user.suspended) {
+      return Color(0xFFFF9800);
+    }
+    return Colors.transparent;
+  }
 
+  String getStatusText(Users user) {
+    if (user.profiledeleted || user.admindeleted) {
+      return "Deleted";
+    } else if (user.suspended) {
+      return "Suspended";
+    }
+    return ""; // No status
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,6 +89,17 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
                 itemBuilder: (context, index) {
                   final user = usersList[index];
                   return ListTile(
+                    leading: ClipOval(
+                      child: Image.network(
+                        user.profilepicture ,
+                        width: 35,
+                        height: 35,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset('assets/user.png', width: 35, height: 35, fit: BoxFit.cover);
+                        },
+                      ),
+                    ),
                     title: Text(user.username),
                     subtitle: Text(user.email),
                     onTap: () {
@@ -83,10 +110,22 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
                         ),
                       );
                     },
+                    trailing: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: getStatusColor(user),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        getStatusText(user),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
                   );
                 },
               ),
             ),
+
           ],
         ),
       ),
