@@ -73,13 +73,10 @@ class SessionManager {
   }
 
   // Update user information
-  Future<void> updateUserInfo(String username, String email, String bio, String? imageUrl) async {
+  Future<void> updateUserInfo(String username, String bio, String? imageUrl) async {
     await _ensureInitialized(); // Ensure initialization
     if (username.isNotEmpty) {
       await _prefs?.setString("username", username);
-    }
-    if (email.isNotEmpty) {
-      await _prefs?.setString("email", email);
     }
     if (bio.isNotEmpty) {
       await _prefs?.setString("bio", bio);

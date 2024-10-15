@@ -3,6 +3,7 @@ import 'dart:io';
 
 import '../ModelData/Users.dart';
 
+import 'DataOperationCallback.dart';
 import 'OperationCallback.dart';
 
 abstract class IUserInterface {
@@ -13,6 +14,6 @@ abstract class IUserInterface {
   void activateProfile(String userId, OperationCallback callback);
   void adminDeleteProfile(String userId, OperationCallback callback);
   void adminUnDeleteProfile(String userId, OperationCallback callback);
-  void updateUserInfo(String username, String email, String bio);
-  Future<String?> uploadProfileImage(String userId, File imageFile);
+  Future<String?>  uploadProfileImage(String userId, File imageFile, DataOperationCallback<String> callback);
+
 }

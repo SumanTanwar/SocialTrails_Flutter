@@ -33,7 +33,7 @@ class Users {
     this.isactive = true,
     this.suspendedreason,
     this.admindeletedon,
-  }) : createdon = createdon ?? Utils.getCurrentDatetime();
+  }) : createdon = createdon ?? Utils.getCurrentDatetime(),bio = bio ?? '';
 
   // Convert a Users object into a Map
   Map<String, dynamic> toJson() {
@@ -75,6 +75,7 @@ class Users {
 
   factory Users.fromSnapshot(DataSnapshot snapshot) {
     final data = snapshot.value as Map<dynamic, dynamic>;
+    print("Data being mapped: $data");
     return Users(
       userId: data['userId'] ?? '',
       username: data['username'] ?? '',

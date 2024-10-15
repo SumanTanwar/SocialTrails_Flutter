@@ -1,236 +1,245 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:socialtrailsapp/Interface/DataOperationCallback.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
-import 'package:socialtrailsapp/Utility/Utils.dart';
 import 'package:socialtrailsapp/viewprofile.dart';
-import 'usersetting.dart'; // Adjust the import according to your structure
+import 'Interface/OperationCallback.dart';
+import 'Utility/UserService.dart';
+import 'Utility/Utils.dart';
 
 class EditProfileScreen extends StatefulWidget {
-
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _database = FirebaseDatabase.instance.ref();
-  final FirebaseStorage _storage = FirebaseStorage.instance;
-  final ImagePicker _picker = ImagePicker();
-  XFile? _imageFile;
-
-
-  // Variable to hold the image URL
-  String? _imageUrl;
+  File? _imageFile;
+  UserService userService = UserService();
 
   @override
   void initState() {
     super.initState();
     _nameController.text = SessionManager().getUsername().toString();
-    _bioController.text =  SessionManager().getEmail().toString();
-    _imageUrl = SessionManager().getImageUrl();
+    _emailController.text = SessionManager().getEmail().toString();
+    _bioController.text = SessionManager().getBio().toString();
   }
 
-  void _updateProfile() async {
-    User? user = _auth.currentUser;
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
 
-    if (user != null) {
-      String newName = _nameController.text.trim();
-      String newBio = _bioController.text.trim();
-      String imageUrl = _imageUrl ?? '';
+  Future<void> _saveProfile() async {
+    String newName = _nameController.text.trim();
+    String newBio = _bioController.text.trim();
+    String currentName = SessionManager().getUsername().toString();
+    String currentBio = SessionManager().getBio().toString();
 
-      // Upload image to Firebase Storage if an image is selected
-      if (_imageFile != null) {
-        imageUrl = await _uploadImageToStorage();
-      }
+    bool nameChanged = newName != currentName;
+    bool bioChanged = newBio != currentBio;
 
-      // Update profile display name and other user data
-      try {
-        await user.updateProfile(displayName: newName);
-        await _updateUserDataInDatabase(newName, newBio, imageUrl);
-      } catch (error) {
-        Utils.showError(context, "Failed to update profile: $error");
+    if (newName.isEmpty) {
+      Utils.showError(context, "User name is required");
+      return;
+    }
+
+    if (_imageFile != null) {
+      await userService.uploadProfileImage(
+        SessionManager().getUserID()!,
+        _imageFile!,
+        DataOperationCallback<String>(
+          onSuccess: (imageUrl) {
+            if (nameChanged || bioChanged) {
+              _updateNameAndBio(imageUrl);
+            } else {
+              SessionManager().updateUserInfo(currentName, currentBio, imageUrl);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ViewProfileScreen()),
+              );
+            }
+          },
+          onFailure: (error) {
+            Utils.showError(context, error);
+          },
+        ),
+      );
+    } else {
+      if (nameChanged || bioChanged) {
+        _updateNameAndBio(SessionManager().getImageUrl().toString());
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ViewProfileScreen()),
+        );
       }
     }
   }
 
-  Future<String> _uploadImageToStorage() async {
-    String userId = _auth.currentUser!.uid;
-    File file = File(_imageFile!.path);
+  void _updateNameAndBio(String imageUrl) {
+    String newName = _nameController.text.trim();
+    String newBio = _bioController.text.trim();
 
-    // Create a reference to the Firebase Storage
-    Reference ref = _storage.ref().child('userprofile/$userId');
-
-    // Upload the image file
-    UploadTask uploadTask = ref.putFile(file);
-    TaskSnapshot snapshot = await uploadTask;
-
-    // Get the download URL
-    String downloadUrl = await snapshot.ref.getDownloadURL();
-    return downloadUrl;
+    userService.updateNameAndBio(SessionManager().getUserID()!, newName, newBio, OperationCallback(
+      onSuccess: () {
+        SessionManager().updateUserInfo(newName, newBio, imageUrl);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ViewProfileScreen()),
+        );
+      },
+      onFailure: (error) {
+        Utils.showError(context, "Update failed: $error");
+      },
+    ));
   }
 
-  Future<void> _updateUserDataInDatabase(String name, String bio, String imageUrl) async {
-    // String userId = _auth.currentUser?.uid ?? '';
-    // try {
-    //   await _database.child("users").child(userId).update({
-    //     'username': name,
-    //     'email': email, // Keep the email unchanged
-    //     'bio': bio,
-    //     'profile_image': imageUrl, // Save the profile image URL
-    //   });
-    //
-    //   await SessionManager().updateUserInfo(name, email, bio, imageUrl); // Update the session manager
-    //   _showSuccess("Profile updated successfully.");
-    //
-    //   // Redirect to user detail page with new values
-    //   Navigator.pushReplacement(
-    //     context,
-    //     MaterialPageRoute(
-    //       builder: (context) => ViewProfileScreen(),
-    //     ),
-    //   );
-    // } catch (error) {
-    //   _showError("Failed to update user data in database: $error");
-    // }
-  }
-
-
-
-  Widget _imageProfile() {
-    return Center(
-      child: Stack(
-        children: <Widget>[
-          CircleAvatar(
-            radius: 40.0,
-            backgroundImage: _imageFile == null
-                ? (_imageUrl != null && _imageUrl!.isNotEmpty
-                ? NetworkImage(_imageUrl!)
-                : AssetImage('assets/user.png')) // Use NetworkImage if URL exists
-                : FileImage(File(_imageFile!.path)) as ImageProvider,
-          ),
-          Positioned(
-            bottom: 1.0,
-            right: 2.0,
-            child: InkWell(
-              onTap: () {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (builder) => bottomSheet()
-                );
-              },
-              child: Icon(
-                Icons.camera_alt,
-                color: Colors.deepPurple,
-                size: 35.0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget bottomSheet() {
-    return Container(
-      height: 100.0,
-      width: MediaQuery.of(context).size.width,
-      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        children: <Widget>[
-          Text("Choose profile photo",
-            style: TextStyle(fontSize: 20.0),
-          ),
-          SizedBox(height: 20),
-          Row(
-            children: <Widget>[
-              TextButton.icon(
-                icon: Icon(Icons.image),
-                onPressed: () {
-                  takePhoto(ImageSource.gallery);
-                },
-                label: Text("Gallery"),
-              ),
-              TextButton.icon(
-                icon: Icon(Icons.camera),
-                onPressed: () {
-                  takePhoto(ImageSource.camera);
-                },
-                label: Text("Camera"),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void takePhoto(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source);
-    setState(() {
-      _imageFile = pickedFile;
-    });
-    Navigator.pop(context);
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    String? imageUrl = SessionManager().getImageUrl();
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.only(top: 150),
-              padding: EdgeInsets.all(12),
-              child: _imageProfile(),
-            ),
-            SizedBox(height: 10),
-            Text("Edit Profile", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: "Name"),
-            ),
-            // Display email but not editable
-            TextField(
-              controller: TextEditingController(text: SessionManager().getEmail().toString()),
-              decoration: InputDecoration(labelText: "Email"),
-              enabled: false,
-            ),
-            TextField(
-              controller: _bioController,
-              decoration: InputDecoration(labelText: "Bio"),
-            ),
-            SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _updateProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-                child: const Text("Save", style: TextStyle(color: Colors.white)),
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 110),
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: _imageFile != null
+                            ? FileImage(_imageFile!)
+                            : (SessionManager().getImageUrl() != null && SessionManager().getImageUrl()!.isNotEmpty)
+                            ? NetworkImage(SessionManager().getImageUrl()!)
+                            : AssetImage('assets/user.png') as ImageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.purple,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '+',
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => UserSettingsScreen()));
-              },
-              child: Text("Back", style: TextStyle(color: Colors.blue)),
-            ),
-          ],
+              SizedBox(height: 20),
+              Text(
+                'Edit Profile',
+                style: TextStyle(
+                  color: Colors.purple,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Divider(color: Colors.black),
+              _buildTextField(_nameController, "User Name", maxLength: 20),
+              _buildTextField(
+                _emailController,
+                "Email",
+                readOnly: true,
+                maxLength: 100,
+                hintStyle: TextStyle(color: Colors.grey),
+                style: TextStyle(color: Colors.grey),
+              ),
+              _buildTextField(_bioController, "Bio", maxLength: 100),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _saveProfile,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                    child: Text('Save', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+      TextEditingController controller,
+      String label, {
+        bool readOnly = false,
+        int? maxLength,
+        TextStyle? hintStyle,
+        TextStyle? style,
+      }) {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: TextField(
+        controller: controller,
+        readOnly: readOnly,
+        maxLength: maxLength,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: label,
+          hintStyle: hintStyle ?? TextStyle(color: Colors.black54),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+            borderSide: const BorderSide(color: Colors.purple),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+            borderSide: const BorderSide(color: Colors.purple, width: 2),
+          ),
+        ),
+        style: style ?? TextStyle(color: Colors.black),
+        buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+          return null;
+        },
       ),
     );
   }

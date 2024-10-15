@@ -98,10 +98,13 @@ class _SigninScreenState extends State<SigninScreen> {
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
-        } else {
+        }
+
+        else {
           // For regular users, check email verification
           if (user.emailVerified) {
             Users? data = await userService.getUserByID(user.uid);
+            print("user bio : ${data?.bio}");
             if (data != null && data.userId != null) {
               await SessionManager().loginUser(
                 data.userId ?? "",
@@ -109,17 +112,25 @@ class _SigninScreenState extends State<SigninScreen> {
                 data.email ?? "",
                 data.bio ?? "",
                 data.notification ?? true,
-                data.roles ?? "",""
+                data.roles ?? "",
+                data.profilepicture ?? ""
               );
 
               if (data?.suspended == true) {
                 Utils.showError(context, "Your account has been suspended by admin. Please contact support.");
                 await _auth.signOut();
               } else {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
+                if(data?.roles == UserRole.moderator.getRole())
+                {
+                  Utils.showError(context, "Moderators is coming soon.");
+                  await _auth.signOut();
+                }
+                else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                }
               }
             } else {
               Utils.showError(context, "Something went wrong! Please try again.");

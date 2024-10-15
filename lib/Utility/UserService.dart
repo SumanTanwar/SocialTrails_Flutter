@@ -1,14 +1,13 @@
 import 'dart:io';
-
+import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:socialtrailsapp/Interface/IUserInterface.dart';
+import '../Interface/DataOperationCallback.dart';
 import '../Interface/OperationCallback.dart';
 import '../ModelData/Users.dart';
 import 'Utils.dart';
-
-
+import 'dart:typed_data';
 
 class UserService extends IUserInterface {
   final DatabaseReference reference;
@@ -17,40 +16,7 @@ class UserService extends IUserInterface {
 
   UserService()
       : reference = FirebaseDatabase.instance.ref(),
-        storage = FirebaseStorage.instance; // Initialize storage
-
-  // Upload image and return the URL
-  Future<String?> uploadProfileImage(String userId, File imageFile) async {
-    try {
-      // Create a unique filename for the image
-      String filePath = 'userprofile/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      UploadTask uploadTask = storage.ref(filePath).putFile(imageFile);
-
-      // Wait for the upload to complete
-      TaskSnapshot snapshot = await uploadTask;
-
-      // Get the download URL
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      print("Error uploading image: $e");
-      return null;
-    }
-  }
-  // New method to update user profile with image URL
-  Future<void> updateUserProfileImage(String userId, File imageFile, OperationCallback callback) async {
-    String? imageUrl = await uploadProfileImage(userId, imageFile);
-    if (imageUrl != null) {
-      Map<String, dynamic> updates = {
-        'userprofile': imageUrl,
-      };
-      await reference.child(_collectionName).child(userId).update(updates);
-      callback.onSuccess();
-    } else {
-      callback.onFailure("Failed to upload image.");
-    }
-  }
-
+        storage = FirebaseStorage.instance;
 
   @override
   void createUser(Users user, OperationCallback callback) {
@@ -70,7 +36,7 @@ class UserService extends IUserInterface {
       if (data.snapshot.exists) {
         Users user = Users.fromSnapshot(data.snapshot);
         if (!user.admindeleted && !user.profiledeleted) {
-          return user; // User is valid
+          return user;
         } else {
           print("User is deleted by admin or profile is deleted.");
           return null;
@@ -84,56 +50,37 @@ class UserService extends IUserInterface {
     }
   }
 
-  Future<void> updateUser(Users user, OperationCallback callback) async {
-    try {
-      await reference.child(_collectionName).child(user.userId).update(
-          user.toJson());
-      callback.onSuccess();
-    } catch (error) {
-      callback.onFailure(error.toString());
-    }
-  }
-
   void setNotification(String userID, bool isEnabled, OperationCallback callback) {
-    print("Setting notification for userID: $userID to $isEnabled"); // Log the action
-
+    print("Setting notification for userID: $userID to $isEnabled");
     reference.child(_collectionName).child(userID).child("notification").set(isEnabled)
         .then((_) {
-      print("Notification setting updated successfully for userID: $userID"); // Log success
+      print("Notification setting updated successfully for userID: $userID");
       callback.onSuccess();
     })
         .catchError((error) {
-      print("Failed to update notification for userID: $userID. Error: $error"); // Log error
+      print("Failed to update notification for userID: $userID. Error: $error");
       callback.onFailure(error.toString());
     });
   }
 
-  void setbackdeleteProfile(String userID) {
-    // This function logs the setback for deleting a profile
-    debugPrint("Setback delete profile for user: $userID");
-  }
-
   void deleteProfile(String userID, OperationCallback callback) {
     reference.child(_collectionName).child(userID).remove().then((_) {
-      // On success
       if (callback != null) {
         callback.onSuccess();
       }
     }).catchError((error) {
-      // On failure
       if (callback != null) {
         callback.onFailure(error.toString());
       }
     });
   }
+
   @override
   Future<Users?> adminGetUserByID(String uid) async {
     try {
       final data = await reference.child(_collectionName).child(uid).once();
-
       if (data.snapshot.exists) {
-        return Users.fromSnapshot(
-            data.snapshot);
+        return Users.fromSnapshot(data.snapshot);
       } else {
         return null;
       }
@@ -142,19 +89,16 @@ class UserService extends IUserInterface {
       return null;
     }
   }
+
   @override
   void suspendProfile(String userId, String suspendedBy, String reason, OperationCallback callback) {
     Map<String, dynamic> updates = {
       'suspended': true,
       'suspendedby': suspendedBy,
       'suspendedreason': reason,
-
       'suspendedon': Utils.getCurrentDatetime(),
       'isActive': false,
-
-      'suspendedon': Utils.getCurrentDatetime(), // You may need to implement this method
       'isactive': false,
-
     };
 
     reference.child(_collectionName).child(userId).update(updates).then((_) {
@@ -167,6 +111,7 @@ class UserService extends IUserInterface {
       }
     });
   }
+
   @override
   void activateProfile(String userId, OperationCallback callback) {
     Map<String, dynamic> updates = {
@@ -187,6 +132,7 @@ class UserService extends IUserInterface {
       }
     });
   }
+
   @override
   void adminDeleteProfile(String userId, OperationCallback callback) {
     Map<String, dynamic> updates = {
@@ -205,6 +151,7 @@ class UserService extends IUserInterface {
       }
     });
   }
+
   @override
   void adminUnDeleteProfile(String userId, OperationCallback callback) {
     Map<String, dynamic> updates = {
@@ -224,50 +171,88 @@ class UserService extends IUserInterface {
     });
   }
 
-  @override
-  void updateUserInfo(String username, String email, String bio) {
-
-  }
-
   Future<List<Users>> getRegularUserList() async {
     List<Users> userList = [];
     final snapshot = await reference.child(_collectionName).once();
-
     if (snapshot.snapshot.exists) {
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       data.forEach((key, value) {
         userList.add(Users.fromMap(key, value));
       });
-      print("Users loaded: ${userList.length}"); // Debug print
+      print("Users loaded: ${userList.length}");
     } else {
       print("No users found");
     }
-
     return userList;
   }
 
-  // Method to fetch moderators
   Future<List<Users>> getModeratorList() async {
     List<Users> moderatorsList = [];
     final snapshot = await reference.child(_collectionName).once();
-
     if (snapshot.snapshot.exists) {
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       data.forEach((key, value) {
-        if (value['roles'] == 'moderator') { // Filter for moderators
+        if (value['roles'] == 'moderator') {
           moderatorsList.add(Users.fromMap(key, value));
         }
       });
-      print("Moderators loaded: ${moderatorsList.length}"); // Debug print
+      print("Moderators loaded: ${moderatorsList.length}");
     } else {
       print("No moderators found");
     }
-
     return moderatorsList;
   }
+
+  Future<String> uploadProfileImage(String userId, File imageFile, DataOperationCallback<String> callback) async {
+    try {
+      String filePath = 'userprofile/$userId/${_generateUUID()}';
+      Reference fileReference = storage.ref(filePath);
+      if (await imageFile.exists()) {
+        List<int> fileBytes = await imageFile.readAsBytes();
+        await fileReference.putData(Uint8List.fromList(fileBytes));
+        String downloadUrl = await fileReference.getDownloadURL();
+        Map<String, dynamic> updates = {
+          'profilepicture': downloadUrl,
+        };
+        await reference.child(_collectionName).child(userId).update(updates);
+        callback.onSuccess(downloadUrl);
+        return downloadUrl;
+      } else {
+        String errorMessage = "File does not exist: ${imageFile.path}";
+        callback.onFailure(errorMessage);
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      callback.onFailure("Error uploading image: ${e.toString()}");
+      throw Exception("Error uploading image: ${e.toString()}");
+    }
+  }
+
+  @override
+  void updateNameAndBio(String userId, String name, String bio, OperationCallback callback) {
+    Map<String, dynamic> updates = {
+      'username': name,
+      'bio': bio,
+    };
+
+    reference.child(_collectionName).child(userId).update(updates).then((_) {
+      if (callback != null) {
+        callback.onSuccess();
+      }
+    }).catchError((error) {
+      if (callback != null) {
+        callback.onFailure(error.toString());
+      }
+    });
+  }
+
+  String _generateUUID() {
+    return '${_randomString(8)}-${_randomString(4)}-${_randomString(4)}-${_randomString(4)}-${_randomString(12)}';
+  }
+
+  String _randomString(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    Random rand = Random();
+    return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
+  }
 }
-
-
-
-
-
