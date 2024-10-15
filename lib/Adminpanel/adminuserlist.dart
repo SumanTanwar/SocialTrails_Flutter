@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../AdminPanel/adminusermanage.dart';
 import '../ModelData/Users.dart';
 import '../Utility/UserService.dart';
+import 'adminmoeratorlist.dart';
 
 class AdminUserListScreen extends StatefulWidget {
   @override
@@ -64,7 +65,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AdminUserDetailManageScreen(userId: '')),
+                      MaterialPageRoute(builder: (context) => AdminModeratorListScreen()),
                     );
                   },
                   child: Row(
@@ -75,6 +76,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
                         "Moderator",
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
+
                     ],
                   ),
                 ),

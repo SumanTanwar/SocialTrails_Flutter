@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/Adminpanel/createmoderator.dart';
 import '../ModelData/Users.dart';
 import '../Utility/UserService.dart';
 import '../Interface/OperationCallback.dart';
@@ -43,7 +44,7 @@ class _AdminModeratorListScreenState extends State<AdminModeratorListScreen> {
   }
 
   void deleteModerator(String userId) {
-    userService.deleteProfile(
+    userService.deleteUserProfile(
       userId,
       OperationCallback(
         onSuccess: () {
@@ -62,14 +63,43 @@ class _AdminModeratorListScreenState extends State<AdminModeratorListScreen> {
     print("Building AdminModeratorListScreen with ${moderatorsList.length} moderators");
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Moderators"),
-      ),
+      // appBar: AppBar(
+      //   title: Text(""),
+      // ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             SizedBox(height: 50),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Moderators",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AdminCreateModeratorPage()),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.admin_panel_settings, size: 30),
+                      SizedBox(width: 8),
+                      Text(
+                        "Create Moderator",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
             Expanded(
               child: isLoading
                   ? Center(child: CircularProgressIndicator())
@@ -79,9 +109,22 @@ class _AdminModeratorListScreenState extends State<AdminModeratorListScreen> {
                 itemCount: moderatorsList.length,
                 itemBuilder: (context, index) {
                   final moderator = moderatorsList[index];
+
                   return ListTile(
+                    leading: ClipOval(
+                      child: Image.network(
+                        moderator.profilepicture ,
+                        width: 35,
+                        height: 35,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset('assets/user.png', width: 35, height: 35, fit: BoxFit.cover);
+                        },
+                      ),
+                    ),
                     title: Text(moderator.username),
                     subtitle: Text(moderator.email),
+
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () {
@@ -89,6 +132,8 @@ class _AdminModeratorListScreenState extends State<AdminModeratorListScreen> {
                       },
                     ),
                   );
+
+
                 },
               ),
             ),

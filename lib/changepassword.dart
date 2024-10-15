@@ -28,29 +28,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     // Validation
     if (currentPwd.isEmpty) {
-      _showError("Current Password is required");
+      Utils.showError(context,"Current Password is required");
       return;
     } else if (currentPwd.length < 8) {
-      _showError("Current Password should be more than 8 characters");
+      Utils.showError(context,"Current Password should be more than 8 characters");
       return;
     } else if (!Utils.isValidPassword(currentPwd)) {
-      _showError("Current Password must contain at least one letter and one digit");
+      Utils.showError(context,"Current Password must contain at least one letter and one digit");
       return;
     }
 
     if (newPwd.isEmpty) {
-      _showError("New Password is required");
+      Utils.showError(context,"New Password is required");
       return;
     } else if (newPwd.length < 8) {
-      _showError("New Password should be more than 8 characters");
+      Utils.showError(context,"New Password should be more than 8 characters");
       return;
     } else if (!Utils.isValidPassword(newPwd)) {
-      _showError("New Password must contain at least one letter and one digit");
+      Utils.showError(context,"New Password must contain at least one letter and one digit");
       return;
     }
 
     if (newPwd != confirmPwd) {
-      _showError("New Passwords do not match");
+      Utils.showError(context,"New Passwords do not match");
       return;
     }
 
@@ -68,22 +68,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         _sessionManager.logoutUser(); // Logout user after password change
         await _auth.signOut();
 
-        _showSuccess("Password successfully changed! Sign in using new password");
+        Utils.showMessage(context,"Password successfully changed! Sign in using new password");
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => SigninScreen()));
 
       } catch (e) {
-        _showError("Failed to change password! Please try again.");
+        Utils.showError(context,"Failed to change password! Please try again or check your current password.");
       }
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.red))));
-  }
 
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,18 +157,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               obscureText: !_confirmPasswordVisible,
             ),
             SizedBox(height: 20),
-Container(
-  width: double.infinity,
-  child: ElevatedButton(
-    onPressed: _changePassword,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.purple,
-      padding: const EdgeInsets.symmetric(horizontal: 125, vertical: 15),
-      textStyle: const TextStyle(fontSize: 16),
-    ),
-    child: const Text("Change Password", style: TextStyle(color: Colors.white)),
-  ),
-),
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _changePassword,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  padding: const EdgeInsets.symmetric(vertical: 15), // Adjust vertical padding
+                  textStyle: const TextStyle(fontSize: 16), // Font size
+                ),
+                child: const Text(
+                  "Change Password",
+                  style: TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center, // Center text
+                ),
+              ),
+            ),
 
             SizedBox(height: 10),
 

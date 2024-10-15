@@ -28,29 +28,29 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
 
     // Validation
     if (currentPwd.isEmpty) {
-      _showError("Current Password is required");
+      Utils.showError(context, "Current Password is required");
       return;
     } else if (currentPwd.length < 8) {
-      _showError("Current Password should be more than 8 characters");
+      Utils.showError(context, "Current Password should be more than 8 characters");
       return;
     } else if (!Utils.isValidPassword(currentPwd)) {
-      _showError("Current Password must contain at least one letter and one digit");
+      Utils.showError(context, "Current Password must contain at least one letter and one digit");
       return;
     }
 
     if (newPwd.isEmpty) {
-      _showError("New Password is required");
+      Utils.showError(context, "New Password is required");
       return;
     } else if (newPwd.length < 8) {
-      _showError("New Password should be more than 8 characters");
+      Utils.showError(context, "New Password should be more than 8 characters");
       return;
     } else if (!Utils.isValidPassword(newPwd)) {
-      _showError("New Password must contain at least one letter and one digit");
+      Utils.showError(context, "New Password must contain at least one letter and one digit");
       return;
     }
 
     if (newPwd != confirmPwd) {
-      _showError("New Passwords do not match");
+      Utils.showError(context, "New Passwords do not match");
       return;
     }
 
@@ -68,21 +68,13 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
         _sessionManager.logoutUser(); // Logout user after password change
         await _auth.signOut();
 
-        _showSuccess("Password successfully changed! Sign in using new password");
+        Utils.showMessage(context, "Password successfully changed! Sign in using new password");
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => SigninScreen()));
 
       } catch (e) {
-        _showError("Failed to change password! Please try again.");
+        Utils.showError(context,"Failed to change password! Please try again or check your current password.");
       }
     }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.red))));
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
   }
 
   @override
@@ -97,9 +89,9 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
             Image.asset('assets/socialtrails_logo.png', width: 150, height: 150),
             const SizedBox(height: 10),
             Text("Change Password", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text("Enter your current password and new password to change.", style: TextStyle(fontSize: 16, color: Colors.purple)),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             // Current Password Field
             TextField(
@@ -108,9 +100,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
                 labelText: 'Current Password',
                 border: OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _currentPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
+                  icon: Icon(_currentPasswordVisible ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _currentPasswordVisible = !_currentPasswordVisible;
@@ -120,7 +110,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
               ),
               obscureText: !_currentPasswordVisible,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             // New Password Field
             TextField(
@@ -129,9 +119,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
                 labelText: 'New Password',
                 border: OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _newPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
+                  icon: Icon(_newPasswordVisible ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _newPasswordVisible = !_newPasswordVisible;
@@ -141,7 +129,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
               ),
               obscureText: !_newPasswordVisible,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             // Confirm New Password Field
             TextField(
@@ -150,9 +138,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
                 labelText: 'Confirm New Password',
                 border: OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _confirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
+                  icon: Icon(_confirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _confirmPasswordVisible = !_confirmPasswordVisible;
@@ -162,21 +148,25 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
               ),
               obscureText: !_confirmPasswordVisible,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Container(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _changePassword,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(horizontal: 125, vertical: 15),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                child: const Text("Change Password", style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  "Change Password",
+                  style: TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
 
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             TextButton(
               onPressed: () {
@@ -185,7 +175,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
               child: Text("Back", style: TextStyle(color: Colors.blue)),
             ),
 
-            SizedBox(height: 50),
+            const SizedBox(height: 50),
           ],
         ),
       ),
