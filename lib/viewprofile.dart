@@ -15,9 +15,9 @@ class ViewProfileScreen extends StatefulWidget {
 
 class _ViewProfileScreenState extends State<ViewProfileScreen> {
   List<String> _postImages = []; // To store post images
-   int postsCount = 0;
-   int followersCount = 0;
-   int followingsCount = 0;
+  int postsCount = 0;
+  int followersCount = 0;
+  int followingsCount = 0;
   @override
   void initState() {
     super.initState();
@@ -102,7 +102,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(),
+                      builder: (context) => EditProfileScreen(currentIndex:4, onTap: (index) {  },),
                     ),
                   );
                 },
@@ -122,8 +122,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3, // Adjust as needed
                   childAspectRatio: 1,
-                // crossAxisSpacing: 1,
-                 // mainAxisSpacing: 8,
+                  // crossAxisSpacing: 1,
+                  // mainAxisSpacing: 8,
                 ),
                 itemCount: _postImages.length,
                 itemBuilder: (context, index) {
@@ -162,3 +162,4 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     );
   }
 }
+

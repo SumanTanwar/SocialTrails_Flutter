@@ -3,6 +3,7 @@ import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/ModelData/Users.dart';
+import 'package:socialtrailsapp/main.dart';
 import '../Interface/DataOperationCallback.dart';
 import '../ModelData/UserPost.dart';
 import '../Utility/UserPostService.dart';
@@ -35,9 +36,9 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
 
     _fetchUserPosts(widget.userId);
     if(user?.admindeleted == true)
-      {
-        deleteProfileStatus = "Deleted profile by admin on :  ${user?.admindeletedon}";
-      }
+    {
+      deleteProfileStatus = "Deleted profile by admin on :  ${user?.admindeletedon}";
+    }
     setState(() {
       isLoading = false;
     });
@@ -175,6 +176,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   Widget build(BuildContext context) {
 
     return Scaffold(
+      appBar: AppBar(title: Text("Manage User")),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Container(
@@ -213,53 +215,53 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
               UserDetailText(label: user?.bio ?? ''),
               UserDetailText(label: user?.email ?? ''),
               SizedBox(height: 5),
-            if (user?.profiledeleted == true) ...[
-              UserDetailText(
-                label: "user has deleted own profile.",
-                isVisible: true,
-                textColor: Colors.white,
-                backgroundColor: Colors.red[300]!,
-              )
+              if (user?.profiledeleted == true) ...[
+                UserDetailText(
+                  label: "user has deleted own profile.",
+                  isVisible: true,
+                  textColor: Colors.white,
+                  backgroundColor: Colors.red[300]!,
+                )
               ]
               else ...[
-              UserDetailText(
-                label:  "Suspended profile: ${user?.suspendedreason}",
-                isVisible: user?.suspended ?? false,
-                textColor: user?.suspended == true ? Colors.white : Colors.black,
-                backgroundColor: user?.suspended == true ? Color(0xFFFF9800) : Colors.transparent,
-              ),
-              SizedBox(height: 5),
-              UserDetailText(
-                label: deleteProfileStatus,
-                isVisible: user?.admindeleted ?? false,
-                textColor: user?.admindeleted == true ? Colors.white : Colors.black,
-                backgroundColor: user?.admindeleted == true ? Colors.red[300]! : Colors.transparent,
-              ),
-],
-    if (user?.profiledeleted == false) ...[
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 30.0),
-                    child: SizedBox(
-                      width: 150,
-                      child: ProfileButton(
-                        label: user?.suspended == true ? 'UnSuspend Profile' : 'Suspend Profile',
-                        onPressed: user?.suspended == true ? () => _activateProfile(widget.userId) : _showSuspendDialog,
+                UserDetailText(
+                  label:  "Suspended profile: ${user?.suspendedreason}",
+                  isVisible: user?.suspended ?? false,
+                  textColor: user?.suspended == true ? Colors.white : Colors.black,
+                  backgroundColor: user?.suspended == true ? Color(0xFFFF9800) : Colors.transparent,
+                ),
+                SizedBox(height: 5),
+                UserDetailText(
+                  label: deleteProfileStatus,
+                  isVisible: user?.admindeleted ?? false,
+                  textColor: user?.admindeleted == true ? Colors.white : Colors.black,
+                  backgroundColor: user?.admindeleted == true ? Colors.red[300]! : Colors.transparent,
+                ),
+              ],
+              if (user?.profiledeleted == false) ...[
+                Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30.0),
+                      child: SizedBox(
+                        width: 150,
+                        child: ProfileButton(
+                          label: user?.suspended == true ? 'UnSuspend Profile' : 'Suspend Profile',
+                          onPressed: user?.suspended == true ? () => _activateProfile(widget.userId) : _showSuspendDialog,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 20),
-                  SizedBox(
-                    width: 150,
-                    child: ProfileButton(
-                      label: user?.admindeleted == true ? 'Activate Profile' : 'Delete Profile',
-                      onPressed: user?.admindeleted == true ? () => _undeleteProfile(widget.userId) : () => _deleteProfile(widget.userId),
+                    SizedBox(width: 20),
+                    SizedBox(
+                      width: 150,
+                      child: ProfileButton(
+                        label: user?.admindeleted == true ? 'Activate Profile' : 'Delete Profile',
+                        onPressed: user?.admindeleted == true ? () => _undeleteProfile(widget.userId) : () => _deleteProfile(widget.userId),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-    ],
+                  ],
+                ),
+              ],
               SizedBox(height: 10),
               _postImages.isNotEmpty
                   ? Expanded(
@@ -291,6 +293,9 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
           ),
         ),
       ),
+      bottomNavigationBar: AdminBottomNavigation(currentIndex: 4, onTap: (index){
+
+      }),
     );
   }
 }
@@ -368,6 +373,9 @@ class ProfileButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
       ),
+
     );
+
   }
 }
+

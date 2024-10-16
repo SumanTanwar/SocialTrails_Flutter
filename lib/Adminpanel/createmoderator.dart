@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:socialtrailsapp/Adminpanel/adminmoeratorlist.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
+import 'package:socialtrailsapp/main.dart';
 import 'package:socialtrailsapp/signin.dart';
 import '../ModelData/UserRole.dart';
 import '../ModelData/Users.dart';
@@ -118,7 +119,7 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     // appBar: AppBar(title: Text("Create New Moderator")),
+      appBar: AppBar(title: Text("Create New Moderator")),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -160,6 +161,10 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
           ],
         ),
       ),
+      bottomNavigationBar: AdminBottomNavigation(currentIndex: 4, onTap: (index){
+
+      }),
     );
   }
 }
+

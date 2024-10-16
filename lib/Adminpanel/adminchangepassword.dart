@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/Utils.dart';
+import 'package:socialtrailsapp/main.dart';
 import 'package:socialtrailsapp/signin.dart';
 
 class AdminChangePasswordScreen extends StatefulWidget {
@@ -80,6 +81,7 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Change Password')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -179,6 +181,10 @@ class _AdminChangePasswordScreenState extends State<AdminChangePasswordScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: AdminBottomNavigation(currentIndex: 4, onTap: (index){
+
+      }),
     );
   }
 }
+

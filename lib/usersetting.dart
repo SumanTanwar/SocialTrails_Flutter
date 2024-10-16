@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/main.dart';
 import 'package:socialtrailsapp/signin.dart';
 import 'Utility/Utils.dart';
 import 'changepassword.dart';
@@ -19,10 +20,14 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final UserService _userService = UserService();
 
+
+
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController(text: SessionManager().getUsername() ?? "User");
+    _usernameController = TextEditingController(
+      text: SessionManager().getUsername() ?? "User",
+    );
     _notificationsEnabled = SessionManager().getNotificationStatus();
   }
 
@@ -38,11 +43,30 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
   void _navigateToChangePassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+      MaterialPageRoute(
+        builder: (context) => ChangePasswordScreen(
+          currentIndex: 4,
+          onTap: (index){
+            setState(() {
+              var  _currentIndex = index; // Update the state with the tapped index
+            });
+          },
+        ),
+      ),
     );
   }
 
-
+  void _navigateToEditProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          onTap: (index) {},
+          currentIndex: 4,
+        ),
+      ),
+    );
+  }
 
   void _showDeleteAccountDialog() {
     showDialog(
@@ -71,7 +95,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                       // After successful profile deletion, delete from Firebase Auth
                       try {
                         await user.delete(); // Delete the user from Firebase Auth
-                       Utils.showMessage(context, "Account deleted successfully.");
+                        Utils.showMessage(context, "Account deleted successfully.");
 
                         // Clear credentials and log out
                         Utils.removeRememberCredentials();
@@ -103,7 +127,6 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     String? imageUrl = SessionManager().getImageUrl();
@@ -121,7 +144,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                    backgroundImage: (imageUrl != null && imageUrl.isNotEmpty)
                         ? NetworkImage(imageUrl) // Use NetworkImage for URL
                         : AssetImage('assets/user.png') as ImageProvider, // Default image
                   ),
@@ -169,7 +192,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                         onFailure: (errorMessage) {
                           Utils.showError(context, "Failed to update notification status: $errorMessage");
                           setState(() {
-                            _notificationsEnabled = !value;
+                            _notificationsEnabled = !value; // Roll back the switch if failed
                           });
                         },
                       ));
@@ -182,6 +205,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             ),
             Divider(thickness: 1, color: Colors.grey),
 
+            // Change Password
             GestureDetector(
               onTap: _navigateToChangePassword,
               child: Padding(
@@ -194,15 +218,12 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             ),
             Divider(thickness: 1, color: Colors.grey),
 
+            // Edit Profile
             GestureDetector(
               onTap: () {
                 User? user = _auth.currentUser;
                 if (user != null) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(),
-                    ),
-                  );
+                  _navigateToEditProfile(); // Navigate to Edit Profile
                 } else {
                   Utils.showError(context, "User not found. Please log in again.");
                 }
@@ -218,6 +239,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
 
             Divider(thickness: 1, color: Colors.grey),
 
+            // Delete Profile
             GestureDetector(
               onTap: _showDeleteAccountDialog,
               child: Padding(
@@ -230,6 +252,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             ),
             Divider(thickness: 1, color: Colors.grey),
 
+            // Log Out
             GestureDetector(
               onTap: _logout,
               child: Padding(
@@ -247,3 +270,4 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
     );
   }
 }
+
