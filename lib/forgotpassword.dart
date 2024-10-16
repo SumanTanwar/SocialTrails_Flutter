@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -22,6 +23,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       _showAlertDialog("Check your email to reset your password");
+      Future.delayed(Duration(seconds: 2), () {
+        Navigator.pop(context); // This will go back to the previous page (sign in)
+      });
     } catch (e) {
       _showAlertDialog("Failed to send reset email: ${e.toString()}");
     }
@@ -60,8 +64,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               controller: _emailController,
               decoration: InputDecoration(
                 labelText: "Email",
-               // fillColor: Colors.grey[200],
-               // filled: true,
+                // fillColor: Colors.grey[200],
+                // filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Colors.purple),
@@ -104,3 +108,4 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     );
   }
 }
+
