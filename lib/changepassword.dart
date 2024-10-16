@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
-import 'package:socialtrailsapp/Utility/Utils.dart';
-import 'package:socialtrailsapp/signin.dart';
-import 'package:socialtrailsapp/usersetting.dart';
+import 'package:socialtrailsapp/main.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const ChangePasswordScreen({
+    Key? key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : super(key: key);
+
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
 }
@@ -22,66 +29,40 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _confirmPasswordVisible = false;
 
   void _changePassword() async {
-    String currentPwd = _currentPwdController.text.trim();
-    String newPwd = _newPwdController.text.trim();
-    String confirmPwd = _confirmPwdController.text.trim();
+    String currentPassword = _currentPwdController.text.trim();
+    String newPassword = _newPwdController.text.trim();
+    String confirmPassword = _confirmPwdController.text.trim();
 
-    // Validation
-    if (currentPwd.isEmpty) {
-      Utils.showError(context,"Current Password is required");
-      return;
-    } else if (currentPwd.length < 8) {
-      Utils.showError(context,"Current Password should be more than 8 characters");
-      return;
-    } else if (!Utils.isValidPassword(currentPwd)) {
-      Utils.showError(context,"Current Password must contain at least one letter and one digit");
+    if (newPassword != confirmPassword) {
+      _showError("New password and confirm password do not match.");
       return;
     }
 
-    if (newPwd.isEmpty) {
-      Utils.showError(context,"New Password is required");
-      return;
-    } else if (newPwd.length < 8) {
-      Utils.showError(context,"New Password should be more than 8 characters");
-      return;
-    } else if (!Utils.isValidPassword(newPwd)) {
-      Utils.showError(context,"New Password must contain at least one letter and one digit");
-      return;
-    }
+    try {
+      User? user = _auth.currentUser;
 
-    if (newPwd != confirmPwd) {
-      Utils.showError(context,"New Passwords do not match");
-      return;
-    }
-
-    // Change password logic
-    User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        // Re-authenticate user
-        String email = user.email!;
-        AuthCredential credential = EmailAuthProvider.credential(email: email, password: currentPwd);
-
-        await user.reauthenticateWithCredential(credential);
-        await user.updatePassword(newPwd);
-
-        _sessionManager.logoutUser(); // Logout user after password change
-        await _auth.signOut();
-
-        Utils.showMessage(context,"Password successfully changed! Sign in using new password");
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => SigninScreen()));
-
-      } catch (e) {
-        Utils.showError(context,"Failed to change password! Please try again or check your current password.");
+      if (user != null) {
+        await user.updatePassword(newPassword);
+        _showSuccess("Password changed successfully.");
+        Navigator.pop(context); // Go back to previous screen
       }
+    } catch (e) {
+      _showError("Failed to change password: ${e.toString()}");
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.red))));
+  }
 
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message, style: TextStyle(color: Colors.green))));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Change Password')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -102,9 +83,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 labelText: 'Current Password',
                 border: OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _currentPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
+                  icon: Icon(_currentPasswordVisible ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _currentPasswordVisible = !_currentPasswordVisible;
@@ -123,9 +102,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 labelText: 'New Password',
                 border: OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _newPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
+                  icon: Icon(_newPasswordVisible ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _newPasswordVisible = !_newPasswordVisible;
@@ -144,9 +121,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 labelText: 'Confirm New Password',
                 border: OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _confirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
+                  icon: Icon(_confirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _confirmPasswordVisible = !_confirmPasswordVisible;
@@ -157,36 +132,28 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               obscureText: !_confirmPasswordVisible,
             ),
             SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _changePassword,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(vertical: 15), // Adjust vertical padding
-                  textStyle: const TextStyle(fontSize: 16), // Font size
-                ),
-                child: const Text(
-                  "Change Password",
-                  style: TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center, // Center text
-                ),
+
+            // Change Password Button
+            ElevatedButton(
+              onPressed: _changePassword,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                padding: const EdgeInsets.symmetric(horizontal: 125, vertical: 15),
+                textStyle: const TextStyle(fontSize: 16),
               ),
+              child: const Text("Change Password", style: TextStyle(color: Colors.white)),
             ),
-
-            SizedBox(height: 10),
-
-            TextButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => UserSettingsScreen()));
-              },
-              child: Text("Back", style: TextStyle(color: Colors.blue)),
-            ),
-
-            SizedBox(height: 50),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigation(
+          currentIndex: widget.currentIndex,
+          onTap: (onTap){
+            widget.onTap(onTap);  // Call the passed onTap function to update index
+          }
       ),
     );
   }
 }
+
+

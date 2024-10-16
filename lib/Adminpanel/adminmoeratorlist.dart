@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Adminpanel/createmoderator.dart';
+import 'package:socialtrailsapp/main.dart';
 import '../ModelData/Users.dart';
 import '../Utility/UserService.dart';
 import '../Interface/OperationCallback.dart';
@@ -63,9 +64,9 @@ class _AdminModeratorListScreenState extends State<AdminModeratorListScreen> {
     print("Building AdminModeratorListScreen with ${moderatorsList.length} moderators");
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(""),
-      // ),
+      appBar: AppBar(
+        title: Text("Moderator List"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -140,6 +141,10 @@ class _AdminModeratorListScreenState extends State<AdminModeratorListScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: AdminBottomNavigation(currentIndex: 4, onTap: (index){
+
+      }),
     );
   }
 }
+

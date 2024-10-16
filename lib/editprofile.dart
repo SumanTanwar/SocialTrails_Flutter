@@ -3,12 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:socialtrailsapp/Interface/DataOperationCallback.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/main.dart';
 import 'package:socialtrailsapp/viewprofile.dart';
 import 'Interface/OperationCallback.dart';
 import 'Utility/UserService.dart';
 import 'Utility/Utils.dart';
 
 class EditProfileScreen extends StatefulWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const EditProfileScreen({
+    Key? key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : super(key: key);
+
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
@@ -114,6 +124,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Profile'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Go back to the previous screen
+          },
+        ),
+        backgroundColor: Colors.purpleAccent,
+      ),
       resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(
         child: Padding(
@@ -121,7 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 110),
+              SizedBox(height: 20),
               Stack(
                 alignment: Alignment.bottomRight,
                 children: [
@@ -206,6 +226,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: BottomNavigation(
+          currentIndex: widget.currentIndex,
+          onTap: (index) {
+            print("Tapped on: $index");
+            widget.onTap(index);  // Call the passed onTap function to update index
+          }
+      ),
     );
   }
 
@@ -244,3 +271,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+
