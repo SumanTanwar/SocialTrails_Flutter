@@ -8,12 +8,17 @@ class UserPost {
   String? updatedon;
   bool postdeleted;
   bool? flagged;
-  bool? moderationStatus;
+  bool? moderationstatus;
   List<Uri>  imageUris;
   double? latitude;
   double? longitude;
   String? location;
   List<String> uploadedImageUris;
+  int likecount;
+  bool isliked;
+  int commentcount;
+  String? username;
+  String? userprofilepicture;
 
   UserPost({
     this.postId,
@@ -24,6 +29,11 @@ class UserPost {
     required this.longitude,
     required this.latitude,
     this.uploadedImageUris = const [],
+    this.likecount = 0,
+    this.isliked = false,
+    this.commentcount = 0,
+    this.username,
+    this.userprofilepicture,
   })  : createdon = Utils.getCurrentDatetime(),
         postdeleted = false;
 
@@ -35,6 +45,11 @@ class UserPost {
     required this.longitude,
     required this.latitude,
     this.uploadedImageUris = const [],
+    this.likecount = 0,
+    this.isliked = false,
+    this.commentcount = 0,
+    this.username,
+    this.userprofilepicture,
   })  : imageUris = [],
         createdon = Utils.getCurrentDatetime(),
         postdeleted = false;
@@ -51,7 +66,12 @@ class UserPost {
 
     )
       ..createdon = json['createdon'] as String?
-      ..postdeleted = json['postdeleted'] as bool? ?? false;
+      ..postdeleted = json['postdeleted'] as bool? ?? false
+      ..likecount = json['likecount'] as int? ?? 0
+      ..isliked = json['isliked'] as bool? ?? false
+      ..commentcount = json['commentcount'] as int? ?? 0
+      ..username = json['username'] as String?
+      ..userprofilepicture = json['userprofilepicture'] as String?;
   }
 
   Map<String, dynamic> toJson() {

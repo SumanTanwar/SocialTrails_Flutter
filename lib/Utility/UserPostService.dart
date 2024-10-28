@@ -1,21 +1,28 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
-import 'package:http/http.dart';
+import 'package:socialtrailsapp/ModelData/PostComment.dart';
+import 'package:socialtrailsapp/Utility/PostCommentService.dart';
+import 'package:socialtrailsapp/Utility/UserService.dart';
+
 import '../Interface/DataOperationCallback.dart';
 import '../Interface/IUserPostInterface.dart';
 import '../Interface/OperationCallback.dart';
 import '../ModelData/UserPost.dart';
+import '../ModelData/Users.dart';
 import 'PostImagesService.dart';
 
 class UserPostService implements IUserPostInterface {
   final DatabaseReference reference;
   static const String _collectionName = "post";
   final PostImagesService postImagesService;
-
+  final UserService userService;
+  final PostCommentService postCommentService;
   UserPostService()
       : reference = FirebaseDatabase.instance.ref(),
-        postImagesService = PostImagesService();
+        postImagesService = PostImagesService(),
+        userService = UserService(),
+        postCommentService = PostCommentService();
 
   @override
   Future<void> createPost(UserPost userPost, OperationCallback callback) async {
@@ -119,5 +126,76 @@ class UserPostService implements IUserPostInterface {
           onFailure(error);
         }
     ));
+  }
+  Future<void> getAllUserPostDetail(String userId, DataOperationCallback<List<UserPost>> callback) async {
+    try {
+      final snapshot = await reference.child(_collectionName).once();
+      List<UserPost> postList = [];
+      List<UserPost> tempList = [];
+
+      if (snapshot.snapshot.exists) {
+        for (var childSnapshot in snapshot.snapshot.children) {
+          final value = childSnapshot.value;
+          if (value is Map) {
+            Map<String, dynamic> postData = Map<String, dynamic>.from(value);
+            UserPost post = UserPost.fromJson(postData);
+            if (userId == post.userId && !post.postdeleted) {
+              post.postId = childSnapshot.key;
+              tempList.add(post);
+            }
+          }
+        }
+      }
+
+      if (tempList.isEmpty) {
+        callback.onSuccess(postList); // Return empty list if no posts found
+        return;
+      }
+
+      List<Future<void>> postFutures = [];
+
+      for (UserPost post in tempList) {
+        postFutures.add(Future(() async {
+          List<String> imageUris = await getAllPhotosAsync(post.postId ?? "");
+          post.uploadedImageUris = imageUris;
+
+          Users? userDetails = await getUserDetails(post.userId);
+          post.username = userDetails?.username;
+          post.userprofilepicture = userDetails?.profilepicture;
+
+          int commentCount = await countCommentsForPost(post.postId ?? "");
+          post.commentcount = commentCount;
+
+          postList.add(post);
+        }));
+      }
+
+      await Future.wait(postFutures);
+
+      postList.sort((post1, post2) => post2.createdon!.compareTo(post1.createdon!));
+      callback.onSuccess(postList); // Call onSuccess with the populated list
+    } catch (e) {
+      callback.onFailure(e.toString()); // Use callback for failure
+    }
+  }
+
+
+
+
+  Future<Users?> getUserDetails(String userId) async {
+    Users? user = await userService.getUserByID(userId);
+    return user;
+  }
+
+  Future<int> countCommentsForPost(String postId) async {
+    Completer<int> completer = Completer();
+
+    postCommentService.retrieveComments(postId, (comments) {
+      completer.complete(comments.length);
+    }, (error) {
+      completer.completeError(error);
+    });
+
+    return completer.future;
   }
 }
