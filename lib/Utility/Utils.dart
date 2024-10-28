@@ -43,4 +43,24 @@ class Utils {
     await prefs.remove('remember_username');
     await prefs.remove('remember_me');
   }
+  static String getRelativeTime(String? dateString) {
+    final DateFormat format = DateFormat('yyyy-MM-dd HH:mm:ss');
+    try {
+      DateTime date = format.parse(dateString!);
+      final DateTime now = DateTime.now();
+      final Duration diff = now.difference(date);
+
+      if (diff.inMinutes < 1) {
+        return "posted recently";
+      } else if (diff.inDays < 1) {
+        return "${diff.inHours} hour${diff.inHours != 1 ? 's' : ''} ago"; // Adjust for pluralization
+      } else {
+        final DateFormat outputFormat = DateFormat('MMM d');
+        return "on ${outputFormat.format(date)}";
+      }
+    } catch (e) {
+      print("Error parsing date: $e");
+    }
+    return "";
+  }
 }

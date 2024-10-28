@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/userpostdetail.dart';
 import 'Interface/DataOperationCallback.dart';
+import 'ModelData/PostImageData.dart';
+import 'ModelData/UserPost.dart';
 import 'Utility/SessionManager.dart';
 import 'Utility/UserPostService.dart';
 import 'editprofile.dart';
-import '../ModelData/UserPost.dart';
 
 
 class ViewProfileScreen extends StatefulWidget {
-
-
   @override
   _ViewProfileScreenState createState() => _ViewProfileScreenState();
 }
 
 class _ViewProfileScreenState extends State<ViewProfileScreen> {
-  List<String> _postImages = []; // To store post images
+  List<PostImageData> _postImages = [];
   int postsCount = 0;
   int followersCount = 0;
   int followingsCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -25,35 +26,27 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   }
 
   Future<void> _fetchUserPosts() async {
-    print("function call");
-    String userId = SessionManager().getUserID() ?? ''; // Get the user ID
+    String userId = SessionManager().getUserID() ?? '';
     UserPostService userPostService = UserPostService();
-    print("uuserid : $userId");
 
     await userPostService.getAllUserPost(userId, DataOperationCallback<List<UserPost>>(
       onSuccess: (posts) {
-
-        //print("posts count : $count");
         setState(() {
-
           _postImages = posts
-              .map((post) => (post.uploadedImageUris?.isNotEmpty == true)
-              ? post.uploadedImageUris![0]
-              : null)
-              .where((image) => image != null)
-              .cast<String>()
+              .where((post) => post.uploadedImageUris?.isNotEmpty == true)
+              .map((post) => PostImageData(
+            postId: post.postId ?? '',
+            imageUrl: post.uploadedImageUris![0],
+          ))
               .toList();
-
           postsCount = _postImages.length;
         });
       },
       onFailure: (error) {
-        // Handle error
         print("Failed to fetch posts: $error");
       },
     ));
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +95,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(currentIndex:4, onTap: (index) {  },),
+                      builder: (context) => EditProfileScreen(currentIndex: 4, onTap: (index) {}),
                     ),
                   );
                 },
@@ -115,25 +108,32 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
               ),
             ),
             SizedBox(height: 10),
-            // Display the gallery of images
+
             _postImages.isNotEmpty
                 ? Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // Adjust as needed
+                  crossAxisCount: 3,
                   childAspectRatio: 1,
-                  // crossAxisSpacing: 1,
-                  // mainAxisSpacing: 8,
                 ),
                 itemCount: _postImages.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      //borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey, width: 1),
-                      image: DecorationImage(
-                        image: NetworkImage(_postImages[index].toString()),
-                        fit: BoxFit.cover,
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserPostDetailScreen(postDetailId: _postImages[index].postId),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 1),
+                        image: DecorationImage(
+                          image: NetworkImage(_postImages[index].imageUrl),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   );
@@ -162,4 +162,3 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     );
   }
 }
-
