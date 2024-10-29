@@ -74,7 +74,10 @@ class _UserPostDetailScreenState extends State<UserPostDetailScreen> {
           controller: _scrollController,
           itemCount: userPosts.length,
           itemBuilder: (context, index) {
-            return PostItem(post: userPosts[index]);
+            return PostItem(
+              key: ValueKey(userPosts[index].postId),
+              post: userPosts[index],
+            );
           },
         ),
       ),

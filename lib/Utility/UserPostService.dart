@@ -239,7 +239,23 @@ class UserPostService implements IUserPostInterface {
     }
   }
 
+  Future<void> updateLikeCount(String postId, int change, DataOperationCallback<int> callback) async {
+    try {
+      DatabaseReference postRef = reference.child(_collectionName).child(postId).child('likecount');
 
+      final DatabaseEvent event = await postRef.once();
+      final DataSnapshot snapshot = event.snapshot;
+      int currentCount = (snapshot.value as int?) ?? 0;
+
+
+      currentCount += change;
+      await postRef.set(currentCount);
+
+      callback.onSuccess(currentCount);
+    } catch (e) {
+      callback.onFailure(e.toString());
+    }
+  }
 
 
 
