@@ -8,6 +8,7 @@ import 'ModelData/PostLike.dart';
 import 'ModelData/UserPost.dart';
 import 'Utility/PostLikeService.dart';
 import 'Utility/Utils.dart';
+import 'commentdialog.dart';
 
 class PostItem extends StatefulWidget {
   final UserPost post;
@@ -109,6 +110,24 @@ class _PostItemState extends State<PostItem> {
     );
   }
 
+  void _showCommentsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return CommentDialog(
+          postId: widget.post.postId!,
+          userId: SessionManager().getUserID()!,
+          onCommentCountUpdated: (newCount) {
+            setState(() {
+              widget.post.commentcount = newCount;
+            });
+          },
+        );
+      },
+    );
+  }
+
+
   // Method to open report dialog
   void openReportDialog(BuildContext context, String postId) {
     String reason = "";
@@ -169,6 +188,7 @@ class _PostItemState extends State<PostItem> {
       print('Failed to submit report: $error');
     });
   }
+
 
 
 
@@ -265,7 +285,7 @@ class _PostItemState extends State<PostItem> {
               height: 20,
               child: IconButton(
                 icon: Image.asset('assets/chat.png'),
-                onPressed: () {},
+                onPressed: _showCommentsDialog,
                 padding: EdgeInsets.zero,
               ),
             ),
