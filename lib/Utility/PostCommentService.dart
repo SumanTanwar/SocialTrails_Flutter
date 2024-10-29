@@ -15,6 +15,7 @@ class PostCommentService implements IPostComment{
       : reference = FirebaseDatabase.instance.ref(),
         userService = UserService();
 
+
   @override
   Future<void> retrieveComments(String postId, Function(List<PostComment>) onSuccess, Function(String) onFailure) async {
     try {
@@ -30,35 +31,37 @@ class PostCommentService implements IPostComment{
           PostComment comment = PostComment.fromJson(entry.value);
           comment.postcommentId = entry.key;
 
-          // Fetch user details
+
           userService.getUserByID(comment.userId).then((user) {
             if (user != null) {
               comment.username = user.username;
               comment.userprofilepicture = user.profilepicture;
             }
+            comments.add(comment);
             count++;
+
 
             if (count == data.length) {
               onSuccess(comments);
             }
           }).catchError((error) {
             count++;
+
             if (count == data.length) {
               onSuccess(comments);
             }
           });
-
-          comments.add(comment);
         }
 
         if (comments.isEmpty) {
           onSuccess(comments);
         }
       } else {
-        onSuccess([]);
+        onSuccess([]); // No comments found
       }
     } catch (e) {
       onFailure(e.toString());
     }
   }
+
 }
