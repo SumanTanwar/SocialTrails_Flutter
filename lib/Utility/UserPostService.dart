@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:http/http.dart';
 import 'package:socialtrailsapp/ModelData/PostComment.dart';
+import 'package:socialtrailsapp/Utility/FollowService.dart';
 import 'package:socialtrailsapp/Utility/PostCommentService.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 
@@ -18,11 +20,14 @@ class UserPostService implements IUserPostInterface {
   final PostImagesService postImagesService;
   final UserService userService;
   final PostCommentService postCommentService;
+  final FollowService followService;
   UserPostService()
       : reference = FirebaseDatabase.instance.ref(),
         postImagesService = PostImagesService(),
         userService = UserService(),
+        followService = FollowService(),
         postCommentService = PostCommentService();
+
 
   @override
   Future<void> createPost(UserPost userPost, OperationCallback callback) async {
@@ -58,7 +63,7 @@ class UserPostService implements IUserPostInterface {
             Map<String, dynamic> postData = Map<String, dynamic>.from(value);
             UserPost post = UserPost.fromJson(postData);
             print("post  ${post.userId}");
-            if (userId == post.userId && !post.postdeleted) {
+            if (userId == post.userId) {
               post.postId = childSnapshot.key;
               tempList.add(post);
               print("added  ${post.postId}");
@@ -136,10 +141,11 @@ class UserPostService implements IUserPostInterface {
       if (snapshot.snapshot.exists) {
         for (var childSnapshot in snapshot.snapshot.children) {
           final value = childSnapshot.value;
+
           if (value is Map) {
             Map<String, dynamic> postData = Map<String, dynamic>.from(value);
             UserPost post = UserPost.fromJson(postData);
-            if (userId == post.userId && !post.postdeleted) {
+            if (userId == post.userId ) {
               post.postId = childSnapshot.key;
               tempList.add(post);
             }
@@ -179,9 +185,6 @@ class UserPostService implements IUserPostInterface {
     }
   }
 
-
-
-
   Future<Users?> getUserDetails(String userId) async {
     Users? user = await userService.getUserByID(userId);
     return user;
@@ -191,11 +194,53 @@ class UserPostService implements IUserPostInterface {
     Completer<int> completer = Completer();
 
     postCommentService.retrieveComments(postId, (comments) {
+
       completer.complete(comments.length);
     }, (error) {
-      completer.completeError(error);
+      completer.complete(0);
     });
 
-    return completer.future;
+    return completer.future; // Return the completer future
   }
+
+  Future<void> retrievePostsForFollowedUsers(String currentUserId, DataOperationCallback<List<UserPost>> callback) async {
+    try {
+      // Fetch followed user IDs
+      List<String> followedUserIds = await followService.getFollowAndFollowerIdsByUserId(currentUserId);
+      print("post followers count: ${followedUserIds.length}");
+
+      if (followedUserIds.isEmpty) {
+        print("No followed users");
+        callback.onSuccess([]); // Return an empty list
+        return;
+      }
+
+      List<UserPost> postList = [];
+      List<Future<void>> postFutures = [];
+
+      for (String userId in followedUserIds) {
+        postFutures.add(getAllUserPostDetail(userId, DataOperationCallback<List<UserPost>>(
+          onSuccess: (posts) {
+            print("Post count for user $userId: ${posts.length}");
+            postList.addAll(posts);
+          },
+          onFailure: (error) {
+            print("Error fetching posts for user $userId: $error");
+          },
+        )));
+      }
+
+      // Wait for all post retrievals to complete
+      await Future.wait(postFutures);
+      print("Total post list count: ${postList.length}");
+      callback.onSuccess(postList);
+    } catch (e) {
+      callback.onFailure("Error retrieving posts: ${e.toString()}");
+    }
+  }
+
+
+
+
+
 }

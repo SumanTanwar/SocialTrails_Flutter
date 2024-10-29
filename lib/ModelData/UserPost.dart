@@ -6,7 +6,6 @@ class UserPost {
   String captiontext;
   String? createdon;
   String? updatedon;
-  bool postdeleted;
   bool? flagged;
   bool? moderationstatus;
   List<Uri>  imageUris;
@@ -34,8 +33,8 @@ class UserPost {
     this.commentcount = 0,
     this.username,
     this.userprofilepicture,
-  })  : createdon = Utils.getCurrentDatetime(),
-        postdeleted = false;
+  })  : createdon = Utils.getCurrentDatetime();
+
 
   UserPost.withoutImages({
     this.postId,
@@ -51,8 +50,8 @@ class UserPost {
     this.username,
     this.userprofilepicture,
   })  : imageUris = [],
-        createdon = Utils.getCurrentDatetime(),
-        postdeleted = false;
+        createdon = Utils.getCurrentDatetime();
+
 
   factory UserPost.fromJson(Map<String, dynamic> json) {
     return UserPost.withoutImages(
@@ -66,7 +65,6 @@ class UserPost {
 
     )
       ..createdon = json['createdon'] as String?
-      ..postdeleted = json['postdeleted'] as bool? ?? false
       ..likecount = json['likecount'] as int? ?? 0
       ..isliked = json['isliked'] as bool? ?? false
       ..commentcount = json['commentcount'] as int? ?? 0
@@ -80,7 +78,6 @@ class UserPost {
       'userId': userId,
       'captiontext': captiontext,
       'createdon': createdon,
-      'postdeleted': postdeleted,
       'location': location,
       'latitude': latitude,
       'longitude': longitude
