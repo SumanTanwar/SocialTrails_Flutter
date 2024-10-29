@@ -13,7 +13,7 @@ class _LocationPickerState extends State<LocationPicker> {
   LatLng? _pickedLocation;
   final TextEditingController _searchController = TextEditingController();
   List<String> _suggestions = [];
-  final String apiKey = 'AIzaSyBdmLSrq0OuQob_ZvkV6zh9sVS2FmnYo4o';
+  final String apiKey = 'AIzaSyA0fTMwiCSxxNp18DLvIfmCEwF1F2FW1PU';
   Set<Marker> _markers = {};
   GoogleMapController? _mapController;
 
