@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     bool isAdminOrModerator = userRole == UserRole.admin.getRole() || userRole == UserRole.moderator.getRole();
-  
+
     List<Widget> screens = isAdminOrModerator ? _adminModeratorScreens : _userScreens;
 
     return Scaffold(
