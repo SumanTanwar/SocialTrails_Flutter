@@ -6,6 +6,7 @@ import 'package:socialtrailsapp/Interface/IUserInterface.dart';
 import '../Interface/DataOperationCallback.dart';
 import '../Interface/OperationCallback.dart';
 import '../ModelData/Users.dart';
+import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'Utils.dart';
 import 'dart:typed_data';
 
@@ -284,4 +285,33 @@ class UserService extends IUserInterface {
     Random rand = Random();
     return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
   }
+
+  Future<List<Users>> getActiveUserList() async {
+    try {
+      final snapshot = await reference.child(_collectionName).once();
+      List<Users> activeUsersList = [];
+
+      // Check if the snapshot contains any data
+      if (snapshot.snapshot.value != null) {
+        final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+        data.forEach((key, value) {
+          final user = Users.fromJson(value); // Ensure Users has a fromJson method
+
+          // Check if the user meets the active criteria
+          if (user.roles == UserRole.user.role && // Ensure UserRole is accessible
+              !user.admindeleted &&
+              !user.profiledeleted &&
+              user.isactive) {
+            activeUsersList.add(user);
+          }
+        });
+      }
+
+      return activeUsersList;
+    } catch (error) {
+      print("Error fetching active users: $error");
+      throw error; // Handle the error as needed
+    }
+  }
+
 }
