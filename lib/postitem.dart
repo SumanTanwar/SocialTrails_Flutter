@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/postlikelist.dart';
@@ -108,6 +109,69 @@ class _PostItemState extends State<PostItem> {
     );
   }
 
+  // Method to open report dialog
+  void openReportDialog(BuildContext context, String postId) {
+    String reason = "";
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Report Post'),
+          content: TextField(
+            onChanged: (value) {
+              reason = value;
+            },
+            decoration: InputDecoration(hintText: 'Enter reason for reporting'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                reportPost(postId, reason);
+                Navigator.of(context).pop();
+              },
+              child: Text('Submit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void reportPost(String postId, String reason) {
+    String? reporterId = SessionManager().getUserID();
+    if (reporterId == null) {
+      print('User is not logged in. Cannot report post.');
+      return;
+    }
+
+
+    Map<String, dynamic> reportData = {
+      'createdon': DateTime.now().toString(),
+      'reason': reason,
+      'reportedid': postId,
+      'reporterid': reporterId,
+      'reportid': FirebaseDatabase.instance.ref().child('report').push().key,
+      'reporttype': 'post',
+      'status': 'pending',
+    };
+
+    
+    FirebaseDatabase.instance.ref('report').child(reportData['reportid']).set(reportData).then((_) {
+      print('Report submitted successfully: $reportData');
+    }).catchError((error) {
+      print('Failed to submit report: $error');
+    });
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -214,7 +278,9 @@ class _PostItemState extends State<PostItem> {
                 height: 30,
                 child: IconButton(
                   icon: Icon(Icons.warning),
-                  onPressed: () {},
+                  onPressed: () {
+                    openReportDialog(context, widget.post.postId!);
+                  },
                   padding: EdgeInsets.zero,
                 ),
               ),
