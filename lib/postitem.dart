@@ -1,5 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/Interface/OperationCallback.dart';
+import 'package:socialtrailsapp/ModelData/Report.dart';
+import 'package:socialtrailsapp/Utility/ReportService.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/postlikelist.dart';
 import 'Interface/DataOperationCallback.dart';
@@ -36,7 +39,8 @@ class _PostItemState extends State<PostItem> {
   }
 
   void _loadLikes() {
-    postLikeService.getLikesForPost(widget.post.postId!, DataOperationCallback<List<PostLike>>(
+    postLikeService.getLikesForPost(
+        widget.post.postId!, DataOperationCallback<List<PostLike>>(
       onSuccess: (result) {
         setState(() {
           likes = result;
@@ -50,7 +54,8 @@ class _PostItemState extends State<PostItem> {
 
   void _checkIfLiked() {
     String? userId = SessionManager().getUserID();
-    postLikeService.getPostLikeByUserAndPostId(widget.post.postId!, userId!, DataOperationCallback<PostLike?>(
+    postLikeService.getPostLikeByUserAndPostId(
+        widget.post.postId!, userId!, DataOperationCallback<PostLike?>(
       onSuccess: (postLike) {
         setState(() {
           isLiked = postLike != null;
@@ -65,7 +70,8 @@ class _PostItemState extends State<PostItem> {
   void _toggleLike() {
     String? userId = SessionManager().getUserID();
     if (widget.post.postId != null) {
-      postLikeService.likeAndUnlikePost(widget.post.postId!, userId!, DataOperationCallback<LikeResult>(
+      postLikeService.likeAndUnlikePost(
+          widget.post.postId!, userId!, DataOperationCallback<LikeResult>(
         onSuccess: (data) {
           setState(() {
             isLiked = data.isLike;
@@ -94,7 +100,8 @@ class _PostItemState extends State<PostItem> {
               postId: widget.post.postId!,
               onLikeDeleted: (PostLike deletedLike) {
                 setState(() {
-                  likes.removeWhere((like) => like.postlikeId == deletedLike.postlikeId);
+                  likes.removeWhere((like) =>
+                  like.postlikeId == deletedLike.postlikeId);
                 });
               },
             ),
@@ -131,24 +138,65 @@ class _PostItemState extends State<PostItem> {
   // Method to open report dialog
   void openReportDialog(BuildContext context, String postId) {
     String reason = "";
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Report Post'),
-          content: TextField(
-            onChanged: (value) {
-              reason = value;
-            },
-            decoration: InputDecoration(hintText: 'Enter reason for reporting'),
+          contentPadding: EdgeInsets.all(16.0),
+          title: Text(
+            'Report Issue',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Why are you reporting?',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 5),
+              Text(
+                'Your report is anonymous. If someone is in immediate danger, call the local emergency service.',
+                style: TextStyle(fontSize: 12),
+                textAlign: TextAlign.start,
+              ),
+              SizedBox(height: 8),
+              TextField(
+                maxLines: 5, // Set to allow multiple lines
+                onChanged: (value) {
+                  reason = value;
+                },
+                decoration: InputDecoration(
+                  hintText: 'Describe the issue here',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                    borderSide: BorderSide(
+                      color: Colors.grey,
+                      width: 1.0,
+                    ),
+                  ),
+                  contentPadding: EdgeInsets.all(8.0),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                reportPost(postId, reason);
-                Navigator.of(context).pop();
+                // Ensure reason is not empty before submitting
+                if (reason.isNotEmpty) {
+                  reportPost(postId, reason); // Pass the non-nullable postId
+                  Navigator.of(context).pop();
+                } else {
+                  // Show a message if the reason is empty
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please provide a reason for reporting.')),
+                  );
+                }
               },
-              child: Text('Submit'),
+              child: Text('Report'),
             ),
             TextButton(
               onPressed: () {
@@ -163,31 +211,37 @@ class _PostItemState extends State<PostItem> {
   }
 
 
+
   void reportPost(String postId, String reason) {
-    String? reporterId = SessionManager().getUserID();
-    if (reporterId == null) {
-      print('User is not logged in. Cannot report post.');
-      return;
-    }
+    Report report = Report(
+      createdon: DateTime.now().toString(),
+      reason: reason,
+      reportedid: postId,
+      reporterid: SessionManager().getUserID()!,
+      reporttype: 'post',
+      status: 'pending',
+    );
 
+    ReportService reportService = ReportService();
 
-    Map<String, dynamic> reportData = {
-      'createdon': DateTime.now().toString(),
-      'reason': reason,
-      'reportedid': postId,
-      'reporterid': reporterId,
-      'reportid': FirebaseDatabase.instance.ref().child('report').push().key,
-      'reporttype': 'post',
-      'status': 'pending',
-    };
-
-    
-    FirebaseDatabase.instance.ref('report').child(reportData['reportid']).set(reportData).then((_) {
-      print('Report submitted successfully: $reportData');
-    }).catchError((error) {
-      print('Failed to submit report: $error');
-    });
+    reportService.addReport(
+      report,
+      OperationCallback(
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Report submitted successfully!')),
+          );
+        },
+        onFailure: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Something went wrong! Please try again later.')),
+          );
+        },
+      ),
+    );
   }
+
+
 
 
 

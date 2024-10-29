@@ -1,25 +1,25 @@
 
 class Report {
-  String? reportId;
-  String reporterId;
-  String reportedId;
-  String? reportingId;
-  String reportType;
+  String? reportid;
+  String reporterid;
+  String reportedid;
+  String? reportingid;
+  String reporttype;
   String reason;
   String status;
-  String createdOn;
+  String createdon;
   String? username;
   String? userProfilePicture;
 
   Report({
-    this.reportId,
-    required this.reporterId,
-    required this.reportedId,
-    this.reportingId,
-    required this.reportType,
+    this.reportid,
+    required this.reporterid,
+    required this.reportedid,
+    this.reportingid,
+    required this.reporttype,
     required this.reason,
     required this.status,
-    required this.createdOn,
+    required this.createdon,
     this.username,
     this.userProfilePicture,
   });
@@ -27,14 +27,14 @@ class Report {
   // Factory constructor to create Report instance from Firestore data
   factory Report.fromMap(Map<String, dynamic> data) {
     return Report(
-      reportId: data['reportId'],
-      reporterId: data['reporterId'],
-      reportedId: data['reportedId'],
-      reportingId: data['reportingId'],
-      reportType: data['reportType'],
+      reportid: data['reportid'],
+      reporterid: data['reporterid'],
+      reportedid: data['reportedid'],
+      reportingid: data['reportingid'],
+      reporttype: data['reporttype'],
       reason: data['reason'],
       status: data['status'],
-      createdOn: data['createdOn'],
+      createdon: data['createdon'],
       username: data['username'],
       userProfilePicture: data['userProfilePicture'],
     );
@@ -43,14 +43,14 @@ class Report {
   // Convert Report instance to Map for saving to Firestore
   Map<String, dynamic> toMap() {
     return {
-      'reportId': reportId,
-      'reporterId': reporterId,
-      'reportedId': reportedId,
-      'reportingId': reportingId,
-      'reportType': reportType,
+      'reportid': reportid,
+      'reporterid': reporterid,
+      'reportedid': reportedid,
+      'reportingid': reportingid,
+      'reporttype': reporttype,
       'reason': reason,
       'status': status,
-      'createdOn': createdOn,
+      'createdon': createdon,
       'username': username,
       'userProfilePicture': userProfilePicture,
     };
