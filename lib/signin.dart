@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/AdminPanel/AdminDashboard.dart';
 import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,12 +121,16 @@ class _SigninScreenState extends State<SigninScreen> {
                 Utils.showError(context, "Your account has been suspended by admin. Please contact support.");
                 await _auth.signOut();
               } else {
-                if(data?.roles == UserRole.moderator.getRole())
-                {
-                  Utils.showError(context, "Moderators is coming soon.");
-                  await _auth.signOut();
+
+                if (data?.roles == UserRole.moderator.getRole()) {
+
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                        (Route<dynamic> route) => false,
+                  );
                 }
-                else {
+
+            else {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => HomeScreen()),

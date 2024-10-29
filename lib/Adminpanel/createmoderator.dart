@@ -2,11 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
-import 'package:socialtrailsapp/Adminpanel/adminmoeratorlist.dart';
+import 'package:socialtrailsapp/AdminPanel/AdminDashboard.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/main.dart';
-import 'package:socialtrailsapp/signin.dart';
 import '../ModelData/UserRole.dart';
 import '../ModelData/Users.dart';
 
@@ -22,27 +21,22 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  String _generatedPassword = '';
-
   void _createModerator() async {
     String name = _nameController.text.trim();
     String email = _emailController.text.trim();
 
     if (_validateInputs(name, email)) {
-      _generatedPassword = _generateRandomPassword(8);
+      String temporaryPassword = "tempass123"; // Use a default temporary password
       try {
         UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
           email: email,
-          password: _generatedPassword,
+          password: temporaryPassword,
         );
 
         User? currentUser = userCredential.user;
 
         if (currentUser != null) {
-          await currentUser.sendEmailVerification();
-
           String uid = currentUser.uid;
-
 
           Users user = Users(
             userId: uid,
@@ -51,30 +45,27 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
             roles: UserRole.moderator.getRole(),
           );
 
-
           _userService.createUser(user, OperationCallback(
-              onSuccess: () {
-                print("User created successfully");
+              onSuccess: () async {
+                await _sendPasswordResetEmail(email);
                 _clearInputs();
                 _auth.signOut();
+
+                // Navigate to the moderator list
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => AdminModeratorListScreen()),
+                  MaterialPageRoute(builder: (context) => AdminDashboardScreen()),
                 );
               },
               onFailure: (error) {
                 _showError(error);
               }
           ));
-
-
-          await _sendGeneratedPasswordEmail(email);
         }
       } catch (e) {
         _showError(e.toString());
       }
     }
   }
-
 
   bool _validateInputs(String name, String email) {
     if (name.isEmpty) {
@@ -88,23 +79,13 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
     return true;
   }
 
-  String _generateRandomPassword(int length) {
-    const String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%^&*()";
-    String password = List.generate(length, (index) => chars[(chars.length * (Random().nextDouble())).floor()]).join();
-    return password;
-  }
-
-  Future<void> _sendGeneratedPasswordEmail(String email) async {
-    String subject = "Your Moderator Account Creation";
-    String message = "Hello,\n\nYour account has been created successfully.\n\n"
-        "Here are your login details:\n"
-        "Email: $email\n"
-        "Password: $_generatedPassword\n\n"
-        "Please change your password after your first login.\n\n"
-        "Thank you!";
-
-
-    print("Sending email to $email\nSubject: $subject\nMessage: $message");
+  Future<void> _sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      _showError("Password reset email sent to $email");
+    } catch (e) {
+      _showError("Failed to send password reset email.");
+    }
   }
 
   void _clearInputs() {
@@ -125,7 +106,7 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            SizedBox(height:90),
+            SizedBox(height: 90),
             Image.asset('assets/socialtrails_logo.png', width: 150, height: 150),
             SizedBox(height: 20),
             TextField(
@@ -141,30 +122,18 @@ class _AdminCreateModeratorPageState extends State<AdminCreateModeratorPage> {
             SizedBox(height: 15),
             ElevatedButton(
               onPressed: _createModerator,
-              child: Text("Create Moderator", style: TextStyle(color: Colors.white),),
+              child: Text("Create Moderator", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 minimumSize: Size(500, 50),
               ),
             ),
-            SizedBox(height: 15),
-            if (_generatedPassword.isNotEmpty) ...[
-              Text("Generated Password: $_generatedPassword"),
-              ElevatedButton(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: _generatedPassword));
-                  _showError("Password copied to clipboard");
-                },
-                child: Text("Copy Password"),
-              ),
-            ],
           ],
         ),
       ),
-      bottomNavigationBar: AdminBottomNavigation(currentIndex: 4, onTap: (index){
-
+      bottomNavigationBar: AdminBottomNavigation(currentIndex: 4, onTap: (index) {
+        // Handle navigation
       }),
     );
   }
 }
-
