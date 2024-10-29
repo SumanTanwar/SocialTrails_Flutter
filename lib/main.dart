@@ -139,12 +139,12 @@ class _HomeScreenState extends State<HomeScreen> {
     UserSettingsScreen(),
   ];
 
-  final List<Widget> _adminScreens = [
+  final List<Widget> _adminModeratorScreens = [
     AdminDashboardScreen(),
     AdminUserListScreen(),
     AdminDashboardScreen(),
     AdminDashboardScreen(),
-    AdminSettingsScreen()
+    AdminSettingsScreen(),
   ];
 
   @override
@@ -160,11 +160,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return const splashscreen();
     }
 
-    List<Widget> screens = userRole == UserRole.admin.getRole() ? _adminScreens : _userScreens;
+    bool isAdminOrModerator = userRole == UserRole.admin.getRole() || userRole == UserRole.moderator.getRole();
+  
+    List<Widget> screens = isAdminOrModerator ? _adminModeratorScreens : _userScreens;
 
     return Scaffold(
       body: screens[_currentIndex],
-      bottomNavigationBar: userRole == UserRole.admin.getRole()
+      bottomNavigationBar: isAdminOrModerator
           ? AdminBottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -184,5 +186,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-
