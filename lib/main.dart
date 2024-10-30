@@ -5,6 +5,7 @@ import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
 import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/createpost.dart';
+import 'package:socialtrailsapp/searchuser.dart';
 import 'package:socialtrailsapp/splashscreen.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
 import 'package:socialtrailsapp/usersetting.dart';
@@ -133,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _userScreens = [
     UserDashboardScreen(),
-    UserDashboardScreen(),
+    SearchUserView(),
     CreatePostScreen(),
     ViewProfileScreen(),
     UserSettingsScreen(),

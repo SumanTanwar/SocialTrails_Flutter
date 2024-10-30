@@ -1,8 +1,7 @@
 
+import 'package:socialtrailsapp/Interface/DataOperationCallback.dart';
+import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/ModelData/Report.dart';
-
-import 'DataOperationCallback.dart';
-import 'OperationCallback.dart';
 
 
 abstract class IReport {
@@ -10,4 +9,5 @@ abstract class IReport {
   Future<void> getReportCount(DataOperationCallback<int> callback);
   Future<void> fetchReports(DataOperationCallback<List<Report>> callback);
 }
+
 
