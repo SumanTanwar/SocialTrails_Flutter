@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/AdminPanel/adminusermanage.dart';
 import 'package:socialtrailsapp/ModelData/UserPost.dart';
+import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/Utility/UserPostService.dart';
 import 'package:socialtrailsapp/Utility/PostCommentService.dart';
 import 'package:socialtrailsapp/Utility/Utils.dart';
@@ -163,6 +164,7 @@ class _AdminPostDetailScreenState extends State<AdminPostDetailScreen> {
       appBar: AppBar(
         title: Text("Post Detail"),
         actions: [
+          if (SessionManager().getRoleType() != UserRole.moderator.role)
           TextButton(
             onPressed: _deletePost,
             style: TextButton.styleFrom(
