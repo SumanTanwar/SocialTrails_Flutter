@@ -77,6 +77,9 @@ class _UserPostDetailScreenState extends State<UserPostDetailScreen> {
             return PostItem(
               key: ValueKey(userPosts[index].postId),
               post: userPosts[index],
+              onDelete: () {
+                loadPostDetails();
+              },
             );
           },
         ),

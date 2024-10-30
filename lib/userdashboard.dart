@@ -106,6 +106,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                   return PostItem(
                     key: ValueKey(posts[index].postId),
                     post: posts[index],
+                    onDelete: () {
+
+                    },
                   );
                 },
               ),
