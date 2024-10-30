@@ -291,20 +291,19 @@ class UserService extends IUserInterface {
       final snapshot = await reference.child(_collectionName).once();
       List<Users> activeUsersList = [];
 
-      // Check if the snapshot contains any data
       if (snapshot.snapshot.value != null) {
         final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
-        data.forEach((key, value) {
-          final user = Users.fromJson(value); // Ensure Users has a fromJson method
 
-          // Check if the user meets the active criteria
+        for (var value in data.values) {
+          final user = Users.fromJson(Map<String, dynamic>.from(value));
+
           if (user.roles == UserRole.user.role && // Ensure UserRole is accessible
               !user.admindeleted &&
               !user.profiledeleted &&
               user.isactive) {
             activeUsersList.add(user);
           }
-        });
+        }
       }
 
       return activeUsersList;
@@ -313,5 +312,4 @@ class UserService extends IUserInterface {
       throw error; // Handle the error as needed
     }
   }
-
 }

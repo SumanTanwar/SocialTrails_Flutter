@@ -28,7 +28,7 @@ class _SearchUserViewState extends State<SearchUserView> {
 
   Future<void> loadUserList() async {
     try {
-      final users = await UserService().getRegularUserList();
+      final users = await UserService().getActiveUserList();
       setState(() {
         usersList = users.where((user) => user.userId != currentUserID).toList();
         isLoading = false;
