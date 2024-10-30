@@ -8,6 +8,7 @@ import '../Interface/DataOperationCallback.dart';
 import '../ModelData/UserPost.dart';
 import '../Utility/UserPostService.dart';
 import '../Utility/Utils.dart';
+import 'package:socialtrailsapp/follounfollow.dart';
 
 class SearchUserView extends StatefulWidget {
   @override
@@ -84,19 +85,6 @@ class _SearchUserViewState extends State<SearchUserView> {
   }
 }
 
-class FollowUnfollowView extends StatelessWidget {
-  final String userId;
-
-  FollowUnfollowView({required this.userId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Follow/Unfollow User')),
-      body: Center(child: Text('Manage follow status for user $userId')),
-    );
-  }
-}
 
 void main() {
   runApp(MaterialApp(home: SearchUserView()));
