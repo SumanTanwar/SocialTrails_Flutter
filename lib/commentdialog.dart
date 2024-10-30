@@ -3,6 +3,7 @@ import 'ModelData/PostComment.dart';
 import 'ModelData/UserRole.dart';
 import 'Utility/PostCommentService.dart';
 import 'Utility/SessionManager.dart';
+import 'Utility/Utils.dart';
 
 class CommentDialog extends StatefulWidget {
   final String postId;
@@ -69,9 +70,14 @@ class _CommentDialogState extends State<CommentDialog> {
           widget.onCommentCountUpdated(comments.length + 1);
         });
       }, (error) {
-        print("Error adding comment: $error");
+        Utils.showError(context,"Error adding comment: $error");
       });
     }
+    else
+      {
+        Utils.showError(context,"Please enter a comment before sending.");
+      }
+
   }
 
   void _confirmDelete(String commentId, int position) {
@@ -108,7 +114,7 @@ class _CommentDialogState extends State<CommentDialog> {
         });
       },
           (error) {
-        print("Failed to delete comment: $error");
+            Utils.showError(context,"Failed to delete comment: $error");
       },
     );
   }

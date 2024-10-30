@@ -1,8 +1,9 @@
 
 import 'package:socialtrailsapp/ModelData/Report.dart';
 
-typedef OperationCallback = void Function(bool success, String message);
-typedef DataOperationCallback<T> = void Function(T result, String message);
+import 'DataOperationCallback.dart';
+import 'OperationCallback.dart';
+
 
 abstract class IReport {
   Future<void> addReport(Report data, OperationCallback callback);

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/Adminpanel/adminpostmanage.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/ModelData/Users.dart';
 import 'package:socialtrailsapp/main.dart';
 import '../Interface/DataOperationCallback.dart';
+import '../ModelData/PostImageData.dart';
 import '../ModelData/UserPost.dart';
 import '../Utility/UserPostService.dart';
 import '../Utility/Utils.dart';
@@ -23,7 +25,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   bool isLoading = true;
   final UserService userService = UserService();
   String deleteProfileStatus = "";
-  List<String> _postImages = [];
+  List<PostImageData> _postImages = [];
   int postsCount = 0;
   @override
   void initState() {
@@ -56,13 +58,12 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
         setState(() {
 
           _postImages = posts
-              .map((post) => (post.uploadedImageUris?.isNotEmpty == true)
-              ? post.uploadedImageUris![0]
-              : null)
-              .where((image) => image != null)
-              .cast<String>()
+              .where((post) => post.uploadedImageUris?.isNotEmpty == true)
+              .map((post) => PostImageData(
+            postId: post.postId ?? '',
+            imageUrl: post.uploadedImageUris![0],
+          ))
               .toList();
-
           postsCount = _postImages.length;
         });
       },
@@ -180,7 +181,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Container(
-          margin: const EdgeInsets.only(top: 50),
+          margin: const EdgeInsets.only(top: 10),
           child: isLoading
               ? Center(child: CircularProgressIndicator())
               : Column(
@@ -274,13 +275,22 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                   ),
                   itemCount: _postImages.length,
                   itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        //borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey, width: 1),
-                        image: DecorationImage(
-                          image: NetworkImage(_postImages[index].toString()),
-                          fit: BoxFit.cover,
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AdminPostDetailScreen(postId: _postImages[index].postId),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey, width: 1),
+                          image: DecorationImage(
+                            image: NetworkImage(_postImages[index].imageUrl),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     );

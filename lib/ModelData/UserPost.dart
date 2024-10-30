@@ -83,4 +83,13 @@ class UserPost {
       'longitude': longitude
     };
   }
+  Map<String, dynamic> toMapUpdate() {
+    return {
+      'captiontext': captiontext,
+      'updatedon': updatedon,
+      'location': location,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
 }
