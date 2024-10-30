@@ -1,10 +1,13 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/ModelData/Report.dart';
 import 'package:socialtrailsapp/Utility/ReportService.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
+import 'package:socialtrailsapp/Utility/UserPostService.dart';
 import 'package:socialtrailsapp/postlikelist.dart';
+import 'package:socialtrailsapp/userpostedit.dart';
 import 'Interface/DataOperationCallback.dart';
 import 'ModelData/LikeResult.dart';
 import 'ModelData/PostLike.dart';
@@ -13,10 +16,12 @@ import 'Utility/PostLikeService.dart';
 import 'Utility/Utils.dart';
 import 'commentdialog.dart';
 
+
 class PostItem extends StatefulWidget {
   final UserPost post;
+  final VoidCallback onDelete;
 
-  const PostItem({Key? key, required this.post}) : super(key: key);
+  const PostItem({Key? key, required this.post, required this.onDelete}) : super(key: key);
 
   @override
   _PostItemState createState() => _PostItemState();
@@ -26,6 +31,7 @@ class _PostItemState extends State<PostItem> {
   late bool isLiked;
   late int likeCount;
   late PostLikeService postLikeService;
+  late String postId;
   List<PostLike> likes = [];
 
   @override
@@ -34,54 +40,63 @@ class _PostItemState extends State<PostItem> {
     postLikeService = PostLikeService();
     isLiked = widget.post.isliked ?? false;
     likeCount = widget.post.likecount;
+    postId = widget.post.postId ?? "";
     _checkIfLiked();
     _loadLikes();
   }
 
   void _loadLikes() {
     postLikeService.getLikesForPost(
-        widget.post.postId!, DataOperationCallback<List<PostLike>>(
-      onSuccess: (result) {
-        setState(() {
-          likes = result;
-        });
-      },
-      onFailure: (error) {
-        print("Error fetching likes: $error");
-      },
-    ));
+      widget.post.postId!,
+      DataOperationCallback<List<PostLike>>(
+        onSuccess: (result) {
+          setState(() {
+            likes = result;
+          });
+        },
+        onFailure: (error) {
+          print("Error fetching likes: $error");
+        },
+      ),
+    );
   }
 
   void _checkIfLiked() {
     String? userId = SessionManager().getUserID();
     postLikeService.getPostLikeByUserAndPostId(
-        widget.post.postId!, userId!, DataOperationCallback<PostLike?>(
-      onSuccess: (postLike) {
-        setState(() {
-          isLiked = postLike != null;
-        });
-      },
-      onFailure: (error) {
-        print("Error fetching like status: $error");
-      },
-    ));
+      widget.post.postId!,
+      userId!,
+      DataOperationCallback<PostLike?>(
+        onSuccess: (postLike) {
+          setState(() {
+            isLiked = postLike != null;
+          });
+        },
+        onFailure: (error) {
+          print("Error fetching like status: $error");
+        },
+      ),
+    );
   }
 
   void _toggleLike() {
     String? userId = SessionManager().getUserID();
     if (widget.post.postId != null) {
       postLikeService.likeAndUnlikePost(
-          widget.post.postId!, userId!, DataOperationCallback<LikeResult>(
-        onSuccess: (data) {
-          setState(() {
-            isLiked = data.isLike;
-            likeCount = data.count;
-          });
-        },
-        onFailure: (error) {
-          print("Error liking/unliking post: $error");
-        },
-      ));
+        widget.post.postId!,
+        userId!,
+        DataOperationCallback<LikeResult>(
+          onSuccess: (data) {
+            setState(() {
+              isLiked = data.isLike;
+              likeCount = data.count;
+            });
+          },
+          onFailure: (error) {
+            print("Error liking/unliking post: $error");
+          },
+        ),
+      );
     } else {
       print("Post ID is null.");
     }
@@ -100,8 +115,7 @@ class _PostItemState extends State<PostItem> {
               postId: widget.post.postId!,
               onLikeDeleted: (PostLike deletedLike) {
                 setState(() {
-                  likes.removeWhere((like) =>
-                  like.postlikeId == deletedLike.postlikeId);
+                  likes.removeWhere((like) => like.postlikeId == deletedLike.postlikeId);
                 });
               },
             ),
@@ -134,8 +148,6 @@ class _PostItemState extends State<PostItem> {
     );
   }
 
-
-  // Method to open report dialog
   void openReportDialog(BuildContext context, String postId) {
     String reason = "";
 
@@ -164,7 +176,7 @@ class _PostItemState extends State<PostItem> {
               ),
               SizedBox(height: 8),
               TextField(
-                maxLines: 5, // Set to allow multiple lines
+                maxLines: 5,
                 onChanged: (value) {
                   reason = value;
                 },
@@ -185,12 +197,10 @@ class _PostItemState extends State<PostItem> {
           actions: [
             TextButton(
               onPressed: () {
-                // Ensure reason is not empty before submitting
                 if (reason.isNotEmpty) {
-                  reportPost(postId, reason); // Pass the non-nullable postId
+                  reportPost(postId, reason);
                   Navigator.of(context).pop();
                 } else {
-                  // Show a message if the reason is empty
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Please provide a reason for reporting.')),
                   );
@@ -209,8 +219,6 @@ class _PostItemState extends State<PostItem> {
       },
     );
   }
-
-
 
   void reportPost(String postId, String reason) {
     Report report = Report(
@@ -241,10 +249,44 @@ class _PostItemState extends State<PostItem> {
     );
   }
 
-
-
-
-
+  void _confirmDeletePost() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Post'),
+          content: Text('Are you sure you want to delete this post?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                UserPostService().deleteUserPost(widget.post.postId!, OperationCallback(
+                  onSuccess: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                    widget.onDelete();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Post deleted successfully!')),
+                    );
+                  },
+                  onFailure: (error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete post. Please try again.')),
+                    );
+                  },
+                ));
+              },
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('No'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +311,7 @@ class _PostItemState extends State<PostItem> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.post.username ?? 'UnKnown User',
+                    widget.post.username ?? 'Unknown User',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -280,14 +322,42 @@ class _PostItemState extends State<PostItem> {
               ),
             ),
             if (SessionManager().getUserID() == widget.post.userId)
-              Container(
-                width: 30,
-                height: 30,
-                child: IconButton(
-                  icon: Image.asset('assets/menu-dots.png'),
-                  onPressed: () {},
-                  padding: EdgeInsets.zero,
-                ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert),
+                onSelected: (value) {
+                  print('Selected: $value');
+                  if (value == 'edit') {
+                    if (postId != null) {
+
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => UserPostEditScreen(postDetailId: postId),
+                        ),
+                      );
+                    } else {
+                      // Handle the case where postId is null
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Unable to edit. Post ID is missing.')),
+                      );
+                    }
+                  }else
+                  if (value == 'delete') {
+                    _confirmDeletePost();
+                  }
+
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Text('Edit'),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Delete'),
+                    ),
+                  ];
+                },
               ),
           ],
         ),
