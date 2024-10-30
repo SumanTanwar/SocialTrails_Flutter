@@ -71,7 +71,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(userRole == 'moderator' ? 'Moderator' : 'Admin'),
+        title: Text(userRole == 'moderator' ? 'MODERATOR' : 'ADMIN'),
         centerTitle: true,
       ),
       body: isLoading

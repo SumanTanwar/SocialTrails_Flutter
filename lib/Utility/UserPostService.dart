@@ -15,6 +15,16 @@ import '../ModelData/Users.dart';
 import 'PostImagesService.dart';
 import 'Utils.dart';
 
+class Result<T> {
+  final T? data;
+  final Object? error;
+
+  Result.success(this.data) : error = null;
+  Result.failure(this.error) : data = null;
+
+  bool get isSuccess => error == null;
+}
+
 class UserPostService implements IUserPostInterface {
   final DatabaseReference reference;
   static const String _collectionName = "post";
@@ -386,4 +396,21 @@ class UserPostService implements IUserPostInterface {
       callback.onFailure(e.toString());
     }
   }
+
+  Future<void> getPostCount(Function(Result<int>) completion) async {
+    try {
+      final DatabaseEvent event = await reference.child(_collectionName).once();
+      final DataSnapshot snapshot = event.snapshot;
+
+      if (snapshot.children.isNotEmpty) {
+        int count = snapshot.children.length; // Get the number of children (posts)
+        completion(Result.success(count));
+      } else {
+        completion(Result.success(0)); // No posts found
+      }
+    } catch (error) {
+      completion(Result.failure(error)); // Handle errors
+    }
+  }
+
 }
