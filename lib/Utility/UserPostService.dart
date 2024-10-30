@@ -13,6 +13,7 @@ import '../Interface/OperationCallback.dart';
 import '../ModelData/UserPost.dart';
 import '../ModelData/Users.dart';
 import 'PostImagesService.dart';
+import 'Utils.dart';
 
 class UserPostService implements IUserPostInterface {
   final DatabaseReference reference;
@@ -257,6 +258,132 @@ class UserPostService implements IUserPostInterface {
     }
   }
 
+  Future<void> getUserPostDetailById(String postId, DataOperationCallback<UserPost> callback) async {
+    try {
+      final snapshot = await reference.child(_collectionName).child(postId).once();
+      if (snapshot.snapshot.exists) {
+        Map<String, dynamic> postData = Map<String, dynamic>.from(snapshot.snapshot.value as Map<dynamic, dynamic>);
+        UserPost post = UserPost.fromJson(postData);
+        post.postId = postId;
+
+        // Fetch the image URIs for the post
+        List<String> imageUris = await getAllPhotosAsync(postId);
+        post.uploadedImageUris = imageUris;
+
+        Users? userDetails = await getUserDetails(post.userId);
+        post.username = userDetails?.username;
+        post.userprofilepicture = userDetails?.profilepicture;
+
+        int commentCount = await countCommentsForPost(post.postId ?? "");
+        post.commentcount = commentCount;
+        callback.onSuccess(post);
+      } else {
+        callback.onFailure("Post not found or user does not have access to it");
+      }
+    } catch (e) {
+      callback.onFailure(e.toString());
+    }
+  }
+  @override
+  Future<void> deleteAllLikesForPost(String postId, Function() onSuccess, Function(String) onFailure) async {
+    try {
+      final snapshot = await reference.child("postlike").orderByChild("postId").equalTo(postId).once();
+
+      if (snapshot.snapshot.value != null) {
+        Map<dynamic, dynamic> data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+        List<Future<void>> deleteTasks = [];
+
+        data.forEach((key, value) {
+          deleteTasks.add(reference.child("postlike").child(key).remove());
+        });
+
+        await Future.wait(deleteTasks);
+        onSuccess();
+      } else {
+        onSuccess();
+      }
+    } catch (e) {
+      onFailure("Failed to delete comments: ${e.toString()}");
+    }
+  }
+  @override
+  Future<void> deleteUserPost(String postId, OperationCallback callback) async {
+    // First, delete all associated comments
+    await postCommentService.deleteAllCommentsForPost(
+      postId,
+          () { // Change here
+        // This callback doesn't take parameters, matching Function()
+        // Then delete all associated likes
+        deleteAllLikesForPost(
+          postId,
+              () { // Change here
+            // Now delete all associated images
+            postImagesService.deleteAllPostImages(
+              postId,
+              OperationCallback(
+                onSuccess: () async {
+                  // Finally, delete the post itself
+                  try {
+                    await reference.child(_collectionName).child(postId).remove();
+                    callback.onSuccess(); // Notify success
+                  } catch (e) {
+                    callback.onFailure("Failed to delete post: ${e.toString()}");
+                  }
+                },
+                onFailure: (error) {
+                  callback.onFailure("Failed to delete images: $error");
+                },
+              ),
+            );
+          },
+              (error) {
+            callback.onFailure("Failed to delete likes: $error");
+          },
+        );
+      },
+          (error) {
+        callback.onFailure("Failed to delete comments: $error");
+      },
+    );
+  }
 
 
+
+
+  @override
+  Future<void> getPostByPostId(String postId, DataOperationCallback<UserPost> callback) async {
+    try {
+      final snapshot = await reference.child(_collectionName).child(postId).once();
+
+      if (snapshot.snapshot.exists) {
+        UserPost post = UserPost.fromJson(Map<String, dynamic>.from(snapshot.snapshot.value as Map));
+        post.postId = postId;
+
+        List<String> imageUris = await getAllPhotosAsync(post.postId ?? "");
+        post.uploadedImageUris = imageUris;
+        callback.onSuccess(post);
+      } else {
+        callback.onFailure("Post not found");
+      }
+    } catch (e) {
+      callback.onFailure(e.toString());
+    }
+  }
+
+  @override
+  Future<void> updateUserPost(UserPost post, OperationCallback callback) async {
+    post.updatedon = Utils.getCurrentDatetime();
+
+    try {
+      // Ensure postId is not null
+      if (post.postId != null) {
+        await reference.child(_collectionName).child(post.postId!).update(post.toMapUpdate());
+        callback.onSuccess();
+      } else {
+        callback.onFailure("Post ID cannot be null.");
+      }
+    } catch (e) {
+      callback.onFailure(e.toString());
+    }
+  }
 }

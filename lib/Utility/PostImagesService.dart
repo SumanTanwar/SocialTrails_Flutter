@@ -102,6 +102,109 @@ class PostImagesService implements IPostImagesInterface {
       callback.onFailure(error.toString());
     });
   }
+  Future<void> deleteAllPostImages(String postId, OperationCallback callback) async {
+    Query photoRef = reference.child(_collectionName).orderByChild("postId").equalTo(postId);
+
+    photoRef.once().then((snapshot) async {
+      if (snapshot.snapshot.exists) {
+        List<Future<void>> deleteTasks = [];
+
+        for (var childSnapshot in snapshot.snapshot.children) {
+          String? photoPath = childSnapshot.child("imagePath").value as String?;
+          if (photoPath != null) {
+            // Delete image from Firebase Storage
+            await deleteImageFromStorage(photoPath);
+
+            // Remove the entry from the database
+            deleteTasks.add(childSnapshot.ref.remove());
+          }
+        }
+
+        await Future.wait(deleteTasks);
+        callback.onSuccess();
+      } else {
+        callback.onFailure("No photos found for this postId.");
+      }
+    }).catchError((error) {
+      callback.onFailure("Database operation failed: $error");
+    });
+  }
+  Future<void> deleteImage(String postId, String photoPath, OperationCallback callback) async {
+    DatabaseReference photoRef = reference.child(_collectionName);
+
+    try {
+      final snapshot = await photoRef.once();
+      if (snapshot.snapshot.exists) {
+        bool photoFound = false;
+
+        for (var childSnapshot in snapshot.snapshot.children) {
+          String storedPostId = childSnapshot.child("postId").value as String;
+          String storedPhotoPath = childSnapshot.child("imagePath").value as String;
+
+          if (storedPostId == postId && storedPhotoPath == photoPath) {
+            photoFound = true;
+
+            await childSnapshot.ref.remove().then((_) async {
+              await deleteImageFromStorage(storedPhotoPath);
+              await updatePhotoOrder(postId, callback);
+              callback.onSuccess();
+            }).catchError((error) {
+              callback.onFailure("Failed to delete database entry. Error: $error");
+            });
+          }
+        }
+
+        if (!photoFound) {
+          callback.onFailure("Photo path not found in the database.");
+        }
+      } else {
+        callback.onFailure("Task failed. No photos found.");
+      }
+    } catch (error) {
+      callback.onFailure("Task failed. Error: $error");
+    }
+  }
+
+  Future<void> deleteImageFromStorage(String photoPath) async {
+    try {
+      Reference storageRef = storage.refFromURL(photoPath);
+      await storageRef.delete();
+      print("Image deleted from Firebase Storage.");
+    } catch (e) {
+      print("Failed to delete image from Firebase Storage: $e");
+    }
+  }
+
+  Future<void> updatePhotoOrder(String postId, OperationCallback callback) async {
+    DatabaseReference photosRef = reference.child(_collectionName);
+
+    try {
+      final dataSnapshot = await photosRef.orderByChild("postId").equalTo(postId).once();
+      if (!dataSnapshot.snapshot.exists) {
+        callback.onFailure("No photos found for this postId.");
+        return;
+      }
+
+      int order = 1;
+      bool failureOccurred = false;
+
+      for (var snapshot in dataSnapshot.snapshot.children) {
+        await snapshot.ref.child("order").set(order).catchError((error) {
+          if (!failureOccurred) {
+            failureOccurred = true;
+            callback.onFailure("Error updating photo order: $error");
+          }
+        });
+        order++;
+      }
+
+      if (!failureOccurred) {
+        callback.onSuccess();
+      }
+    } catch (error) {
+      callback.onFailure("Database operation cancelled: $error");
+    }
+  }
 
 
   String _generateUUID() {
