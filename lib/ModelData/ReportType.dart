@@ -1,18 +1,12 @@
-
 enum ReportType {
-  user,
-  post,
-}
+  user('user'),
+  post('post');
 
-extension ReportTypeExtension on ReportType {
-  String get type {
-    switch (this) {
-      case ReportType.user:
-        return 'user';
-      case ReportType.post:
-        return 'post';
-      default:
-        return '';
-    }
+  final String type;
+
+  const ReportType(this.type);
+
+  String getType() {
+    return type;
   }
 }

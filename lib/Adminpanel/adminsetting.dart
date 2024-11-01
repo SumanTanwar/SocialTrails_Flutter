@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialtrailsapp/Adminpanel/adminchangepassword.dart';
 import 'package:socialtrailsapp/Adminpanel/createmoderator.dart';
+import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/signin.dart';
@@ -19,7 +20,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeSessionManager(); // Ensure SessionManager is initialized
+    _initializeSessionManager();
+    userRole = SessionManager()!.getRoleType() ?? UserRole.admin.role;// Ensure SessionManager is initialized
   }
 
   Future<void> _initializeSessionManager() async {
@@ -37,7 +39,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       try {
         final data = await userService.getUserByID(userId!);
         setState(() {
-          userRole = data?.roles ?? 'admin'; // Use null-aware operator
+         // Use null-aware operator
           isLoading = false;
         });
       } catch (error) {

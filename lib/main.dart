@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/AdminPanel/adminuserlist.dart';
+import 'package:socialtrailsapp/Adminpanel/AdminReportList.dart';
 import 'package:socialtrailsapp/Adminpanel/adminsetting.dart';
 import 'package:socialtrailsapp/ModelData/UserRole.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
@@ -143,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _adminModeratorScreens = [
     AdminDashboardScreen(),
     AdminUserListScreen(),
-    AdminDashboardScreen(),
+    AdminReportListScreen(),
     AdminDashboardScreen(),
     AdminSettingsScreen(),
   ];
