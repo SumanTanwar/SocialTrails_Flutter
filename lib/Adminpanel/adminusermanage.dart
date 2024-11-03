@@ -8,6 +8,7 @@ import 'package:socialtrailsapp/main.dart';
 import '../Interface/DataOperationCallback.dart';
 import '../ModelData/PostImageData.dart';
 import '../ModelData/UserPost.dart';
+import '../ModelData/UserRole.dart';
 import '../Utility/UserPostService.dart';
 import '../Utility/Utils.dart';
 
@@ -239,7 +240,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                   backgroundColor: user?.admindeleted == true ? Colors.red[300]! : Colors.transparent,
                 ),
               ],
-              if (user?.profiledeleted == false) ...[
+              if (user?.profiledeleted == false || (SessionManager().getRoleType() != UserRole.admin.role)) ...[
                 Row(
                   children: [
                     Padding(

@@ -36,7 +36,7 @@ class FollowService implements IFollowService {
                 print("Following ID: $id");
               }
             });
-            allIds.addAll(userFollow.followerIds);
+           // allIds.addAll(userFollow.followerIds);
           } else {
             print("Unexpected data format for user follow: $value");
           }

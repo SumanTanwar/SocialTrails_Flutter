@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
+import '../Interface/DataOperationCallback.dart';
 import '../Utility/UserPostService.dart';
 import '../Utility/UserService.dart';
 import '../ModelData/UserPost.dart';
@@ -63,19 +64,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void getAllUserPost() {
-    userPostService.getPostCount((result) {
-      if (result.isSuccess) {
+    userPostService.getPostCount(DataOperationCallback<int>(
+      onSuccess: (count) {
         setState(() {
-          numberOfPosts = result.data.toString();
+          numberOfPosts = count.toString();
         });
-      } else {
+      },
+      onFailure: (error) {
         setState(() {
           numberOfPosts = "0";
         });
-        print("Error fetching posts count: ${result.error}");
-      }
-    });
+        print("Error fetching posts count: $error");
+      },
+    ));
   }
+
 
   void fetchTotalReports() {
     setState(() {
