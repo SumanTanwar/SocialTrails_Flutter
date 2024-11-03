@@ -15,15 +15,6 @@ import '../ModelData/Users.dart';
 import 'PostImagesService.dart';
 import 'Utils.dart';
 
-class Result<T> {
-  final T? data;
-  final Object? error;
-
-  Result.success(this.data) : error = null;
-  Result.failure(this.error) : data = null;
-
-  bool get isSuccess => error == null;
-}
 
 class UserPostService implements IUserPostInterface {
   final DatabaseReference reference;
@@ -41,23 +32,30 @@ class UserPostService implements IUserPostInterface {
 
 
   @override
-  Future<void> createPost(UserPost userPost, OperationCallback callback) async {
+  Future<void> createPost(UserPost userPost, DataOperationCallback<String> callback) async {
     try {
       String newItemKey = reference.child(_collectionName).push().key!;
       userPost.postId = newItemKey;
+
       await reference.child(_collectionName).child(newItemKey).set(userPost.toJson());
-      await  postImagesService.uploadImages(newItemKey, userPost.imageUris,OperationCallback(onSuccess: (){
-        print("Images uploaded successfully.");
-        callback.onSuccess();
-      }, onFailure:(e){
-        print("Images failed successfully. $e");
-        callback.onFailure(e.toString());
-      }));
-      callback.onSuccess();
+
+      postImagesService.uploadImages(newItemKey, userPost.imageUris, OperationCallback(
+        onSuccess: () {
+          print("Images uploaded successfully.");
+
+          callback.onSuccess(newItemKey);
+        },
+        onFailure: (error) {
+          print("Image upload failed: $error");
+          callback.onFailure(error);
+        },
+      ));
+
     } catch (e) {
       callback.onFailure(e.toString());
     }
   }
+
   @override
   Future<void> getAllUserPost(String userId, DataOperationCallback<List<UserPost>> callback) async {
     try {
@@ -357,9 +355,6 @@ class UserPostService implements IUserPostInterface {
     );
   }
 
-
-
-
   @override
   Future<void> getPostByPostId(String postId, DataOperationCallback<UserPost> callback) async {
     try {
@@ -397,19 +392,20 @@ class UserPostService implements IUserPostInterface {
     }
   }
 
-  Future<void> getPostCount(Function(Result<int>) completion) async {
+  @override
+  Future<void> getPostCount(DataOperationCallback<int> callback) async {
     try {
       final DatabaseEvent event = await reference.child(_collectionName).once();
       final DataSnapshot snapshot = event.snapshot;
 
       if (snapshot.children.isNotEmpty) {
         int count = snapshot.children.length; // Get the number of children (posts)
-        completion(Result.success(count));
+        callback.onSuccess(count);
       } else {
-        completion(Result.success(0)); // No posts found
+        callback.onSuccess(0); // No posts found
       }
     } catch (error) {
-      completion(Result.failure(error)); // Handle errors
+      callback.onFailure(error.toString()); // Handle errors
     }
   }
 

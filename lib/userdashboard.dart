@@ -5,6 +5,7 @@ import 'package:socialtrailsapp/postitem.dart';
 import 'Interface/DataOperationCallback.dart';
 import 'ModelData/UserPost.dart';
 import 'Utility/UserPostService.dart';
+import 'notifications.dart';
 
 class UserDashboardScreen extends StatefulWidget {
   const UserDashboardScreen({Key? key}) : super(key: key);
@@ -77,7 +78,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 IconButton(
                   icon: const Icon(Icons.notifications),
                   onPressed: () {
-                    // Add notification action here
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => NotificationsScreen()),
+                    );
                   },
                 ),
               ],

@@ -177,7 +177,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
     body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Container(
-          margin: const EdgeInsets.only(top: 50),
+          margin: const EdgeInsets.only(top:5.0),
           child: isLoading
               ? Center(child: CircularProgressIndicator())
               : Column(
@@ -210,10 +210,10 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
               ),
               SizedBox(height: 5),
               UserDetailText(label: user?.bio ?? '', onReportPressed: () => openReportDialog(context, user!.userId)),
-              SizedBox(height: 10),
+            //  SizedBox(height: 5),
 
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(1.0),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -227,7 +227,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
                   ),
                 ),
               ),
-
+              SizedBox(height: 10,),
               _postImages.isNotEmpty
                   ? Expanded(
                 child: GridView.builder(

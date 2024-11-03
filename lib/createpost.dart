@@ -2,11 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:socialtrailsapp/Interface/DataOperationCallback.dart';
+import 'package:socialtrailsapp/ModelData/Notification.dart';
+import 'package:socialtrailsapp/Utility/NotificationService.dart';
 import 'package:socialtrailsapp/userdashboard.dart';
 import 'package:socialtrailsapp/viewprofile.dart';
 
 import 'Interface/OperationCallback.dart';
 import 'ModelData/UserPost.dart';
+import 'Utility/FollowService.dart';
 import 'Utility/LocationPicker.dart';
 import 'Utility/SessionManager.dart';
 import 'Utility/UserPostService.dart';
@@ -96,19 +100,44 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       latitude: _latitude
     );
 
-    _userPostService.createPost(userPost, OperationCallback(
-      onSuccess: () {
-        Utils.showMessage(context, "Post created successfully!");
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ViewProfileScreen()), // Replace with your DashboardPage widget
-        );
+    _userPostService.createPost(userPost, DataOperationCallback<String>(
+      onSuccess: (newItemKey) {
+
+        _sendNotifications(newItemKey);
       },
       onFailure: (error) {
         Utils.showError(context, error.toString());
       },
     ));
   }
+  Future<void> _sendNotifications(String postId) async {
+    final followService = FollowService();
+    String currentUserId = SessionManager().getUserID()!;
+
+    try {
+      List<String> followedUserIds = await followService.getFollowAndFollowerIdsByUserId(currentUserId);
+      print("lenght :${followedUserIds.length}");
+      for (String followerId in followedUserIds) {
+        NotificationModal notification = NotificationModal(
+          notifyto: followerId,
+          notifyBy: currentUserId,
+          type: "post",
+          message: " just shared a new post. Check it out!",
+          relatedId: postId,
+        );
+        await NotificationService().sendNotificationToUser(notification);
+      }
+
+      Utils.showMessage(context, "Post created successfully!");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ViewProfileScreen()), // Replace with your DashboardPage widget
+      );
+    } catch (error) {
+      Utils.showError(context, "Failed to fetch followers: $error");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
