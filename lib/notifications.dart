@@ -73,7 +73,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       } else {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => FollowUnfollowView(userId: notification.relatedId)), // Replace with your actual view
+                          MaterialPageRoute(builder: (context) => FollowUnfollowView(userIdToFollow: notification.relatedId)), // Replace with your actual view
                         );
                       }
                     },
