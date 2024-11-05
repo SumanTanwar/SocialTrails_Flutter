@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/ModelData/Report.dart';
+import 'package:socialtrailsapp/Utility/FollowService.dart';
 import 'package:socialtrailsapp/Utility/ReportService.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
@@ -14,6 +15,7 @@ import '../Utility/Utils.dart';
 class FollowUnfollowView extends StatefulWidget {
   final String userId;
 
+
   FollowUnfollowView({required this.userId});
 
   @override
@@ -22,9 +24,108 @@ class FollowUnfollowView extends StatefulWidget {
 
 class _FollowUnfollowViewState extends State<FollowUnfollowView> {
   Users? user;
+
+
   bool isLoading = true;
+  bool isFollowing = false;
+  bool isPendingRequest = false;
+  bool isFollowUnFollow = true;
+  bool isFollowedBack = false;
+  bool showConfirmationButtons = false;
+  String alertMessage = '';
+  bool showingAlert = false;
+
+  String currentUserId = SessionManager().getUserID()!;
   final UserService userService = UserService();
   final UserPostService userPostService = UserPostService();
+  final FollowService followService = FollowService();
+
+
+
+  void sendFollowRequest() {
+    setState(() {
+      isPendingRequest = true;
+      isFollowing = true;
+      isFollowUnFollow = false;
+    });
+
+    // Call the sendFollowRequest method
+    followService.sendFollowRequest(currentUserId, widget.userId).then((_) {
+      // If the function completes successfully
+      setState(() {
+        alertMessage = "Follow request sent!";
+        showingAlert = true;
+        isFollowUnFollow = false; // Change button to unfollow after request is sent
+      });
+    }).catchError((error) {
+      // Handle the error
+      setState(() {
+        alertMessage = "Error sending follow request: $error";
+        showingAlert = true;
+      });
+    });
+  }
+
+  Future<void> _checkPendingRequest() async {
+    bool hasPendingRequest = await followService.checkPendingRequestsForCancel(currentUserId, widget.userId);
+    setState(() {
+      isPendingRequest = hasPendingRequest;
+      isFollowUnFollow = !isPendingRequest;  // If there's a pending request, we shouldn't show the "Follow" button
+    });
+  }
+
+  void unfollowUser() {
+    setState(() {
+      isFollowing = false;
+    });
+  }
+
+  void cancelFollowRequest() {
+    setState(() {
+      isPendingRequest = false;
+      isFollowUnFollow = true;
+    });
+
+    // Call the cancelFollowRequest method
+    followService.cancelFollowRequest(currentUserId, widget.userId).then((_) {
+      // If the function completes successfully
+   //   followService.sendNotify(widget.userId, 'has cancelled the follow request', currentUserId);
+
+      setState(() {
+        alertMessage = "Follow request canceled!";
+        showingAlert = true;
+        isFollowUnFollow = true;  // Change button back to "Follow"
+      });
+    }).catchError((error) {
+      // Handle the error
+      setState(() {
+        alertMessage = "Error canceling follow request: $error";
+        showingAlert = true;
+      });
+    });
+  }
+
+  void confirmFollowRequest() {
+    setState(() {
+      isPendingRequest = false;
+      isFollowing = true;
+    });
+  }
+
+  void rejectFollowRequest() {
+    setState(() {
+      isPendingRequest = false;
+    });
+  }
+
+  void followBack() {
+    setState(() {
+      isFollowedBack = false;
+      isFollowing = true;
+    });
+  }
+
+
   List<String> _postImages = [];
   int postsCount = 0;
 
@@ -32,6 +133,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
   void initState() {
     super.initState();
     _fetchUserDetails();
+    _checkPendingRequest();
   }
 
   Future<void> _fetchUserDetails() async {
@@ -41,6 +143,8 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
       isLoading = false;
     });
   }
+
+
 
   Future<void> _fetchUserPosts(String userId) async {
     await userPostService.getAllUserPost(userId, DataOperationCallback<List<UserPost>>(
@@ -61,11 +165,6 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
         print("Failed to fetch posts: $error");
       },
     ));
-  }
-
-  void _followUser() {
-    // Add your follow logic here, e.g., API call to follow the user
-    print("Followed user with ID: ${widget.userId}");
   }
 
   void openReportDialog(BuildContext context, String userId) {
@@ -208,26 +307,58 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
                   ProfileStat(count: '0', label: 'Followings'), // Placeholder for followings count
                 ],
               ),
-              SizedBox(height: 5),
               UserDetailText(label: user?.bio ?? '', onReportPressed: () => openReportDialog(context, user!.userId)),
             //  SizedBox(height: 5),
 
               Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _followUser,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      textStyle: const TextStyle(fontSize: 16),
-                    ),
-                    child: Text('Follow', style: TextStyle(color: Colors.white)),
-                  ),
+                padding: const EdgeInsets.all(4.0),
+                child: Column(
+                  children: [
+                    // Follow/Unfollow button with your provided style
+                    if (!isPendingRequest) // Show follow/unfollow only if no pending request
+                      Padding(
+                        padding: const EdgeInsets.all(1.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: isFollowing ? unfollowUser : sendFollowRequest,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple, // Button color
+                              padding: const EdgeInsets.symmetric(vertical: 10.0),
+                              textStyle: const TextStyle(fontSize: 16),
+                            ),
+                            child: Text(
+                              isFollowing ? 'Unfollow' : 'Follow',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Cancel Request button
+                    if (isPendingRequest) // Show cancel request only if there's a pending request
+                      Padding(
+                        padding: const EdgeInsets.all(1.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: cancelFollowRequest,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple,
+                              padding: const EdgeInsets.symmetric(vertical: 10.0),
+                              textStyle: const TextStyle(fontSize: 16),
+                            ),
+                            child: Text(
+                              "Cancel Request",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              SizedBox(height: 10,),
+
               _postImages.isNotEmpty
                   ? Expanded(
                 child: GridView.builder(
