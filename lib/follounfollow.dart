@@ -13,137 +13,313 @@ import '../Utility/UserPostService.dart';
 import '../Utility/Utils.dart';
 
 class FollowUnfollowView extends StatefulWidget {
-  final String userId;
 
+  final String userIdToFollow;
 
-  FollowUnfollowView({required this.userId});
+  FollowUnfollowView({ required this.userIdToFollow});
+
 
   @override
   _FollowUnfollowViewState createState() => _FollowUnfollowViewState();
 }
 
 class _FollowUnfollowViewState extends State<FollowUnfollowView> {
+
   Users? user;
 
 
   bool isLoading = true;
   bool isFollowing = false;
   bool isPendingRequest = false;
-  bool isFollowUnFollow = true;
+  bool isFollowUnFollow = false;
   bool isFollowedBack = false;
   bool showConfirmationButtons = false;
+
   String alertMessage = '';
   bool showingAlert = false;
+  List<String> _postImages = [];
+  int postsCount = 0;
 
-  String currentUserId = SessionManager().getUserID()!;
+
+
   final UserService userService = UserService();
   final UserPostService userPostService = UserPostService();
   final FollowService followService = FollowService();
 
-
-
-  void sendFollowRequest() {
-    setState(() {
-      isPendingRequest = true;
-      isFollowing = true;
-      isFollowUnFollow = false;
-    });
-
-    // Call the sendFollowRequest method
-    followService.sendFollowRequest(currentUserId, widget.userId).then((_) {
-      // If the function completes successfully
-      setState(() {
-        alertMessage = "Follow request sent!";
-        showingAlert = true;
-        isFollowUnFollow = false; // Change button to unfollow after request is sent
-      });
-    }).catchError((error) {
-      // Handle the error
-      setState(() {
-        alertMessage = "Error sending follow request: $error";
-        showingAlert = true;
-      });
-    });
-  }
-
-  Future<void> _checkPendingRequest() async {
-    bool hasPendingRequest = await followService.checkPendingRequestsForCancel(currentUserId, widget.userId);
-    setState(() {
-      isPendingRequest = hasPendingRequest;
-      isFollowUnFollow = !isPendingRequest;  // If there's a pending request, we shouldn't show the "Follow" button
-    });
-  }
-
-  void unfollowUser() {
-    setState(() {
-      isFollowing = false;
-    });
-  }
-
-  void cancelFollowRequest() {
-    setState(() {
-      isPendingRequest = false;
-      isFollowUnFollow = true;
-    });
-
-    // Call the cancelFollowRequest method
-    followService.cancelFollowRequest(currentUserId, widget.userId).then((_) {
-      // If the function completes successfully
-   //   followService.sendNotify(widget.userId, 'has cancelled the follow request', currentUserId);
-
-      setState(() {
-        alertMessage = "Follow request canceled!";
-        showingAlert = true;
-        isFollowUnFollow = true;  // Change button back to "Follow"
-      });
-    }).catchError((error) {
-      // Handle the error
-      setState(() {
-        alertMessage = "Error canceling follow request: $error";
-        showingAlert = true;
-      });
-    });
-  }
-
-  void confirmFollowRequest() {
-    setState(() {
-      isPendingRequest = false;
-      isFollowing = true;
-    });
-  }
-
-  void rejectFollowRequest() {
-    setState(() {
-      isPendingRequest = false;
-    });
-  }
-
-  void followBack() {
-    setState(() {
-      isFollowedBack = false;
-      isFollowing = true;
-    });
-  }
-
-
-  List<String> _postImages = [];
-  int postsCount = 0;
+  final currentUserId = SessionManager().getUserID() ?? "" ;
 
   @override
   void initState() {
     super.initState();
     _fetchUserDetails();
-    _checkPendingRequest();
   }
 
   Future<void> _fetchUserDetails() async {
-    user = await userService.adminGetUserByID(widget.userId);
-    _fetchUserPosts(widget.userId);
+    user = await userService.adminGetUserByID(widget.userIdToFollow);
+    _fetchUserPosts(widget.userIdToFollow);
+    _checkPendingRequestsForCancel(widget.userIdToFollow);
     setState(() {
       isLoading = false;
     });
   }
 
+
+  Future<void> _checkPendingRequestsForCancel(String userIdToCheck) async {
+
+    try {
+      bool isPending = await followService.checkPendingRequestsForCancel(currentUserId, userIdToCheck);
+      setState(() {
+        isPendingRequest = isPending;
+        isFollowUnFollow = false;
+      });
+
+      if (!isPending) {
+        _checkPendingforFollowingUser(userIdToCheck);
+
+      }
+    } catch (error) {
+      setState(() {
+        isPendingRequest = false;
+      });
+      print("cancel request false");
+      _checkPendingforFollowingUser(userIdToCheck);
+    }
+  }
+
+  Future<void> _checkPendingforFollowingUser(String userIdToCheck) async {
+
+    try {
+      bool isPending = await followService.checkPendingForFollowingUser(currentUserId, userIdToCheck);
+
+      setState(() {
+        showConfirmationButtons = isPending;
+        isFollowUnFollow = false;
+        showConfirmationButtons = true;
+
+      });
+
+      if (!isPending) {
+        _checkFollowBack(userIdToCheck);
+      } else {
+        print("haspending true");
+      }
+    } catch (error) {
+      setState(() {
+        showConfirmationButtons = false;
+      });
+      print("haspending false");
+      _checkFollowBack(userIdToCheck);
+    }
+  }
+
+
+    void _checkFollowBack(String userIdToCheck) async {
+      String currentUserId = this.currentUserId;
+
+      // Check if the current user is following the user to check
+      try {
+        bool isFollowing = await followService.checkIfFollowed(currentUserId,widget.userIdToFollow);
+
+        if (isFollowing) {
+          setState(() {
+            this.isFollowedBack = true;
+          });
+
+          // Check if the user to check follows the current user back
+          bool isFollowedBack = await followService.checkIfFollowed(currentUserId,widget.userIdToFollow);
+
+          if (isFollowedBack) {
+            setState(() {
+              this.isFollowedBack = false;
+            });
+            updateUIForUnfollowButton();
+          }
+        } else {
+          // Current user is not following, check if the user to check follows back
+          bool isFollowedBack = await followService.checkIfFollowed(currentUserId,widget.userIdToFollow);
+
+          if (isFollowedBack) {
+            updateUIForUnfollowButton();
+          } else {
+            showFollowButton();
+          }
+        }
+      } catch (e) {
+        showFollowButton();
+      }
+    }
+
+
+  Future<void> sendFollowRequest() async {
+    try {
+      await followService.sendFollowRequest(currentUserId, widget.userIdToFollow);
+
+      setState(() {
+        isFollowUnFollow = false;
+        isPendingRequest = true;
+      });
+
+      // sendNotification(userIdToFollow, " has sent a follow request to you", currentUserId);
+      alertMessage = "Follow request sent!";
+      showingAlert = true;
+    } catch (error) {
+      setState(() {
+        alertMessage = "Error sending follow request: $error";
+        showingAlert = true;
+      });
+    }
+  }
+
+
+
+  Future<void> cancelFollowRequest() async {
+    try {
+      await followService.cancelFollowRequest(
+          currentUserId,
+          widget.userIdToFollow);
+
+      setState(() {
+        isPendingRequest = false;
+      });
+      showFollowButton();
+
+
+      // sendNotification(userIdToUnfollow, " has canceled the follow request", currentUserId);
+      alertMessage = "Follow request canceled!";
+      showingAlert = true;
+    } catch (error) {
+      setState(() {
+        isPendingRequest = true;
+        isFollowUnFollow = false;
+        alertMessage = "Error canceling follow request: $error";
+        showingAlert = true;
+      });
+    }
+  }
+
+
+  void _confirmFollowRequest() async {
+    try {
+      // Use positional arguments instead of named
+      await followService.confirmFollowRequest(
+        currentUserId,
+        widget.userIdToFollow,
+      );
+
+      setState(() {
+
+        showConfirmationButtons = false;
+        isFollowedBack = true;
+        showingAlert = true;
+        alertMessage = "Follow request confirmed!";
+      });
+
+      // Send the notification
+      // followService.sendNotify(
+      //   notifyTo: widget.userId,
+      //   text: 'has started following you',
+      //   notifyBy: currentUserId,
+      // );
+    } catch (error) {
+      setState(() {
+        alertMessage = "Error: ${error.toString()}";
+        showingAlert = true;
+      });
+    }
+  }
+
+
+  void _rejectFollowRequest() async {
+    try {
+
+      await followService.rejectFollowRequest(
+        currentUserId: currentUserId,
+        userIdToFollow: widget.userIdToFollow,
+      );
+
+
+      setState(() {
+        alertMessage = "Follow request rejected!";
+        isPendingRequest = false;       // Set pending status to false (no longer pending)
+        showConfirmationButtons = false;
+
+      });
+
+      // Send notification that the user rejected the follow request
+      // await followService.sendNotify(
+      //   notifyTo: widget.userId,        // The user who sent the request
+      //   text: 'has rejected your follow request',
+      //   notifyBy: currentUserId,        // The user who rejected the request
+      // );
+
+      showFollowButton();
+    } catch (error) {
+
+      setState(() {
+        alertMessage = "Error: ${error.toString()}";
+        showingAlert = true;
+      });
+    }
+  }
+
+
+  Future<void> unfollowUser() async {
+    try {
+      // Call unfollowUser service to unfollow the user
+      await followService.unfollowUser(
+          currentUserId: currentUserId,
+          userIdToUnfollow: widget.userIdToFollow
+      );
+
+
+      alertMessage = "You have successfully unfollowed the user";
+      showingAlert = true;
+      showFollowButton();
+
+      // sendNotify(notifyTo: widget.userIdToFollow, text: " has unfollowed you", notifyBy: currentUserId);
+
+    } catch (error) {
+      // Show error message if something goes wrong
+      alertMessage = "Error: ${error.toString()}";
+      showingAlert = true;
+    }
+  }
+
+
+
+  void _followBack() async {
+      try {
+        await followService.confirmFollowBack(currentUserId: currentUserId, userIdToFollow:widget.userIdToFollow);
+
+        setState(() {
+          isFollowedBack = false;
+        });
+        alertMessage = "You are now following this user!";
+        showingAlert = true;
+
+        updateUIForUnfollowButton();
+     //   sendNotify(notifyTo: userId, text: " has started following you", notifyBy: currentUserId);
+      } catch (error) {
+
+      }
+    }
+
+
+
+    void updateUIForUnfollowButton() {
+    setState(() {
+      isFollowUnFollow = true;
+      isFollowing = true;
+    });
+  }
+
+
+  void showFollowButton() {
+    setState(() {
+      isFollowUnFollow = true;
+      isFollowing = false;
+    });
+  }
 
 
   Future<void> _fetchUserPosts(String userId) async {
@@ -309,19 +485,25 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
               ),
               UserDetailText(label: user?.bio ?? '', onReportPressed: () => openReportDialog(context, user!.userId)),
             //  SizedBox(height: 5),
-
               Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: Column(
                   children: [
-                    // Follow/Unfollow button with your provided style
-                    if (!isPendingRequest) // Show follow/unfollow only if no pending request
+
+                    // Follow/Unfollow button
+                    if (isFollowUnFollow)
                       Padding(
                         padding: const EdgeInsets.all(1.0),
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: isFollowing ? unfollowUser : sendFollowRequest,
+                            onPressed: () async {
+                              if (isFollowing) {
+                                unfollowUser();
+                              } else {
+                                sendFollowRequest();
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.purple, // Button color
                               padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -336,13 +518,15 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
                       ),
 
                     // Cancel Request button
-                    if (isPendingRequest) // Show cancel request only if there's a pending request
+                    if (isPendingRequest)
                       Padding(
                         padding: const EdgeInsets.all(1.0),
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: cancelFollowRequest,
+                            onPressed: () async {
+                              cancelFollowRequest();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.purple,
                               padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -355,9 +539,74 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
                           ),
                         ),
                       ),
+
+                    // Show confirm/reject buttons if there's a pending request
+                    if (showConfirmationButtons)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            // First Button - Confirm
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _confirmFollowRequest,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                                  textStyle: const TextStyle(fontSize: 16),
+                                ),
+                                child: Text(
+                                  'Confirm',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 5), // Space between the buttons
+                            // Second Button - Reject
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _rejectFollowRequest,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                                  textStyle: const TextStyle(fontSize: 16),
+                                ),
+                                child: Text(
+                                  'Reject',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+
+                    // Follow Back button
+                    if (isFollowedBack)
+                      Padding(
+                        padding: const EdgeInsets.all(1.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _followBack,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10.0),
+                              backgroundColor: Colors.purple,
+                              textStyle: const TextStyle(fontSize: 16),
+                            ),
+                            child: Text(
+                              'Follow Back',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
+
 
               _postImages.isNotEmpty
                   ? Expanded(

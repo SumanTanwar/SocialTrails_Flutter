@@ -71,7 +71,7 @@ class _SearchUserViewState extends State<SearchUserView> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => FollowUnfollowView(userId: user.userId),
+                          builder: (context) => FollowUnfollowView(userIdToFollow: user.userId),
                         ),
                       );
                     },
