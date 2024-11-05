@@ -76,7 +76,7 @@ class FollowService implements IFollowService {
         final newUserFollow = {
           "followId": followId,
           "userId": currentUserId,
-          "followingIds": {userIdToFollow: true},
+          "followingIds": {userIdToFollow: false},
           "followerIds": [],
           "createdOn": DateTime.now().toIso8601String(),
         };
