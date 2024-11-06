@@ -10,6 +10,7 @@ import '../ModelData/PostImageData.dart';
 import '../ModelData/UserPost.dart';
 import '../ModelData/UserRole.dart';
 import '../Utility/UserPostService.dart';
+import 'package:socialtrailsapp/Utility/FollowService.dart';
 import '../Utility/Utils.dart';
 
 class AdminUserDetailManageScreen extends StatefulWidget {
@@ -27,17 +28,24 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   final UserService userService = UserService();
   String deleteProfileStatus = "";
   List<PostImageData> _postImages = [];
+
   int postsCount = 0;
+  int followersCount = 0;
+  int followingsCount = 0;
+
   @override
   void initState() {
     super.initState();
     _fetchUserDetails();
+    _fetchFollowersCount();
+    _fetchFollowingsCount();
   }
 
   Future<void> _fetchUserDetails() async {
     user = await userService.adminGetUserByID(widget.userId);
 
     _fetchUserPosts(widget.userId);
+
     if(user?.admindeleted == true)
     {
       deleteProfileStatus = "Deleted profile by admin on :  ${user?.admindeletedon}";
@@ -74,6 +82,37 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
       },
     ));
   }
+
+  // Fetch followers count
+  Future<void> _fetchFollowersCount() async {
+    FollowService followService = FollowService();
+    await followService.getFollowersCount(widget.userId, (count, errorMessage) {
+      if (errorMessage == null) {
+        setState(() {
+          followersCount = count;
+        });
+      } else {
+        print("Error fetching followers count: $errorMessage");
+      }
+    });
+  }
+
+  // Fetch followings count
+  Future<void> _fetchFollowingsCount() async {
+    FollowService followService = FollowService();
+    await followService.getFollowingsCount(widget.userId, (count, errorMessage) {
+      if (errorMessage == null) {
+        setState(() {
+          followingsCount = count;
+        });
+      } else {
+        print("Error fetching followings count: $errorMessage");
+      }
+    });
+  }
+
+
+
   void _showSuspendDialog() {
     final reasonController = TextEditingController();
 
@@ -208,9 +247,9 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                   SizedBox(width: 15),
                   ProfileStat(count: postsCount.toString(), label: 'Posts'),
                   SizedBox(width: 15),
-                  ProfileStat(count: '1', label: 'Followers'),
+                  ProfileStat(count: followersCount.toString(), label: 'Followers'),
                   SizedBox(width: 15),
-                  ProfileStat(count: '2', label: 'Followings'),
+                  ProfileStat(count: followingsCount.toString(), label: 'Followings'),
                 ],
               ),
               SizedBox(height: 2),

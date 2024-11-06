@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/FollowersList.dart';
+import 'package:socialtrailsapp/FollowingsList.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/ModelData/Report.dart';
 import 'package:socialtrailsapp/Utility/FollowService.dart';
@@ -38,7 +40,10 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
   String alertMessage = '';
   bool showingAlert = false;
   List<String> _postImages = [];
+
   int postsCount = 0;
+  int followersCount = 0;
+  int followingsCount = 0;
 
 
 
@@ -52,11 +57,42 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
   void initState() {
     super.initState();
     _fetchUserDetails();
+    _fetchFollowersCount();
+    _fetchFollowingsCount();
   }
+
+  Future<void> _fetchFollowersCount() async {
+    FollowService followService = FollowService();
+    await followService.getFollowersCount(widget.userIdToFollow, (count, errorMessage) {
+      if (errorMessage == null) {
+        setState(() {
+          followersCount = count;
+        });
+      } else {
+        print("Error fetching followers count: $errorMessage");
+      }
+    });
+  }
+
+  // Fetch followings count
+  Future<void> _fetchFollowingsCount() async {
+    FollowService followService = FollowService();
+    await followService.getFollowingsCount(widget.userIdToFollow, (count, errorMessage) {
+      if (errorMessage == null) {
+        setState(() {
+          followingsCount = count;
+        });
+      } else {
+        print("Error fetching followings count: $errorMessage");
+      }
+    });
+  }
+
 
   Future<void> _fetchUserDetails() async {
     user = await userService.adminGetUserByID(widget.userIdToFollow);
     _fetchUserPosts(widget.userIdToFollow);
+
     _checkPendingRequestsForCancel(widget.userIdToFollow);
     setState(() {
       isLoading = false;
@@ -476,11 +512,31 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
                     ],
                   ),
                   SizedBox(width: 15),
-                  ProfileStat(count: postsCount.toString(), label: 'Posts'), // Updated to show actual post count
+                  ProfileStat(count: postsCount.toString(), label: 'Posts',onTap: (){},), // Updated to show actual post count
                   SizedBox(width: 15),
-                  ProfileStat(count: '0', label: 'Followers'), // Placeholder for followers count
+                  ProfileStat(
+                    count: followersCount.toString(),
+                    label: 'Followers',
+                    onTap: () {
+                      // Navigate to FollowersList when tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FollowersList(userId:widget.userIdToFollow)),
+                      );
+                    },
+                  ),
                   SizedBox(width: 15),
-                  ProfileStat(count: '0', label: 'Followings'), // Placeholder for followings count
+                  ProfileStat(
+                    count: followingsCount.toString(),
+                    label: 'Followings',
+                    onTap: () {
+                      // Navigate to FollowingsList when tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FollowingsList(userId: widget.userIdToFollow)),
+                      );
+                    },
+                  ),
                 ],
               ),
               UserDetailText(label: user?.bio ?? '', onReportPressed: () => openReportDialog(context, user!.userId)),
@@ -641,23 +697,26 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
 class ProfileStat extends StatelessWidget {
   final String count;
   final String label;
+  final VoidCallback onTap;
 
-  ProfileStat({required this.count, required this.label});
+  ProfileStat({required this.count, required this.label,required this.onTap,});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          count,
-          style: TextStyle(fontSize: 18, color: Colors.black),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 18, color: Colors.black),
-        ),
-      ],
+    return GestureDetector(
+      onTap: onTap,  // Attach the onTap callback to GestureDetector
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: TextStyle(fontSize: 16),
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 }

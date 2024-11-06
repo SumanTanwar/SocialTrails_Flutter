@@ -1,7 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:socialtrailsapp/Interface/IFollowService.dart';
 import '../ModelData/UserFollow.dart';
-import 'UserService.dart';
+import 'package:socialtrailsapp/Utility/UserService.dart';
+import 'package:socialtrailsapp/ModelData/Users.dart';
 
 
 class FollowService implements IFollowService {
@@ -470,6 +471,181 @@ class FollowService implements IFollowService {
       }
     } catch (error) {
       throw Exception("Error confirming follow back: $error");
+    }
+  }
+
+
+  Future<void> getFollowersCount(String userId, Function(int, String?) completion) async {
+    print("userId: $userId");
+
+    try {
+      final snapshot = await reference
+          .child(_collectionName)  // Replace with your collection name
+          .orderByChild('userId')
+          .equalTo(userId)
+          .once();
+
+      int count = 0;
+
+      if (snapshot.snapshot.value != null) {
+        // Safely cast the snapshot value to a Map
+        final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+        data.forEach((key, value) {
+          var userFollow = Map<String, dynamic>.from(value);
+
+          // Check if 'followerIds' exists and is a List
+          if (userFollow.containsKey("followerIds")) {
+            var followerIds = List<String>.from(userFollow["followerIds"] ?? []);
+            count += followerIds.length;
+            print("Follower IDs: $followerIds");
+          }
+        });
+      }
+
+      print("Followers count: $count");
+      completion(count, null);  // Success, passing count and no error message
+    } catch (error) {
+      completion(0, "Error fetching followers count: $error");
+    }
+  }
+
+
+  // Fetch the followings count
+  Future<void> getFollowingsCount(String userId, Function(int, String?) completion) async {
+    try {
+      final snapshot = await reference
+          .child(_collectionName)  // Replace with your collection name
+          .orderByChild('userId')
+          .equalTo(userId)
+          .once();
+
+      int count = 0;
+
+      if (snapshot.snapshot.value != null) {
+        // Safely cast the snapshot value to a Map
+        final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+        data.forEach((key, value) {
+          var userFollow = Map<String, dynamic>.from(value);
+          if (userFollow.containsKey("followingIds")) {
+            var followingIds = Map<String, dynamic>.from(userFollow["followingIds"]);
+            followingIds.forEach((key, value) {
+              if (value == true) {
+                count++;
+                print("Following id: $key");
+              }
+            });
+          }
+        });
+      }
+
+      print("Count of followings: $count");
+      completion(count, null);  // Success, passing count and no error message
+    } catch (error) {
+      completion(0, "Error fetching followings count: $error");
+    }
+  }
+
+  Future<List<Users>> getFollowersDetails(String userId) async {
+    try {
+      DatabaseEvent event = await reference.child(_collectionName)
+          .orderByChild("userId")
+          .equalTo(userId)
+          .once();
+
+      List<String> followerIds = [];
+
+      if (event.snapshot.exists) {
+        for (DataSnapshot ds in event.snapshot.children) {
+          final value = ds.value as Map<dynamic, dynamic>?;
+          if (value != null) {
+            UserFollow userFollow = UserFollow.fromJson(Map<String, dynamic>.from(value));
+
+            // Collect the follower IDs
+            followerIds.addAll(userFollow.followerIds);
+          }
+        }
+      }
+
+      if (followerIds.isEmpty) {
+        return [];  // No followers
+      } else {
+        // Fetch user details for each followerId
+        return await fetchUserDetails(followerIds);
+      }
+    } catch (error) {
+      print("Error fetching followers: $error");
+      throw Exception("Error fetching followers: $error");
+    }
+  }
+
+
+  Future<List<Users>> getFollowingDetails(String userId) async {
+    try {
+      DatabaseEvent event = await reference.child(_collectionName)
+          .orderByChild("userId")
+          .equalTo(userId)
+          .once();
+
+      List<String> followingIds = [];
+
+      if (event.snapshot.exists) {
+        for (DataSnapshot ds in event.snapshot.children) {
+          final value = ds.value as Map<dynamic, dynamic>?;
+          if (value != null) {
+            UserFollow userFollow = UserFollow.fromJson(Map<String, dynamic>.from(value));
+
+            // Collect the following IDs
+            userFollow.followingIds.forEach((id, isFollowing) {
+              if (isFollowing) {
+                followingIds.add(id);
+              }
+            });
+          }
+        }
+      }
+
+      if (followingIds.isEmpty) {
+        return [];  // No following users
+      } else {
+        // Fetch user details for each followingId
+        return await fetchUserDetails(followingIds);
+      }
+    } catch (error) {
+      print("Error fetching following: $error");
+      throw Exception("Error fetching following: $error");
+    }
+  }
+
+
+  Future<List<Users>> fetchUserDetails(List<String> followerIds) async {
+    List<Future<Users?>> futures = [];
+
+    for (String id in followerIds) {
+      futures.add(retrieveUserDetails(id));
+    }
+
+    try {
+      // Wait for all futures to complete
+      List<Users?> results = await Future.wait(futures);
+
+      // Filter out any null values (if user details could not be fetched)
+      List<Users> users = results.whereType<Users>().toList();
+
+      return users;
+    } catch (error) {
+      print("Error fetching user details: $error");
+      throw Exception("Error fetching user details");
+    }
+  }
+
+  Future<Users?> retrieveUserDetails(String userId) async {
+    try {
+      return await userService.getUserByID(userId);  // Call the service to get the user
+    } catch (error) {
+      print("Error retrieving user details for userId: $userId, $error");
+      return null;
     }
   }
 
