@@ -279,7 +279,7 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                   backgroundColor: user?.admindeleted == true ? Colors.red[300]! : Colors.transparent,
                 ),
               ],
-              if (user?.profiledeleted == false || (SessionManager().getRoleType() != UserRole.admin.role)) ...[
+              if (user?.profiledeleted == false && SessionManager().getRoleType() == UserRole.admin.role) ...[
                 Row(
                   children: [
                     Padding(
@@ -302,6 +302,8 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                     ),
                   ],
                 ),
+              ] else if (user?.profiledeleted == true) ...[
+                // Optionally add logic for when the profile is deleted
               ],
               SizedBox(height: 10),
               _postImages.isNotEmpty
