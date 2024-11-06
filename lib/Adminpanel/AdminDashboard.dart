@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/ModelData/Users.dart';
+import 'package:socialtrailsapp/Utility/IssueWarningService.dart';
+import 'package:socialtrailsapp/Utility/ReportService.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/signin.dart';
 import '../Interface/DataOperationCallback.dart';
@@ -16,20 +19,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String numberOfUsers = "0";
   String numberOfPosts = "0";
   String numberOfReports = "0";
+  String numberOfWarnings = "0";
   String userRole = "";
   bool isLoading = true;
 
 
   final UserPostService userPostService = UserPostService();
   final UserService userService = UserService();
+  final ReportService reportService = ReportService();
+  final IssueWarningService issueWarningService = IssueWarningService();
 
   @override
   void initState() {
     super.initState();
     fetchUserRole();
+
     getRegularUserList();
     getAllUserPost();
     fetchTotalReports();
+    fetchTotalWarnings();
   }
 
   Future<void> fetchUserRole() async {
@@ -57,10 +65,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  void getRegularUserList() {
-    setState(() {
-      numberOfUsers = "4";
-    });
+  Future<void> getRegularUserList() async {
+    try {
+      List<Users> userList = await userService.getRegularUserList();
+      setState(() {
+        numberOfUsers = userList.length.toString();
+      });
+    } catch (error) {
+      setState(() {
+        numberOfUsers = "0";
+      });
+      print("Error fetching user list: $error");
+    }
   }
 
   void getAllUserPost() {
@@ -80,10 +96,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
 
-  void fetchTotalReports() {
-    setState(() {
-      numberOfReports = "4";
-    });
+  Future<void> fetchTotalReports() async {
+    reportService.getReportCount(DataOperationCallback<int>(onSuccess: (count) {
+      setState(() {
+        numberOfReports = count.toString();
+      });
+    }, onFailure: (error) {
+      setState(() {
+        numberOfReports = "0";
+      });
+      print("Error fetching report count: $error");
+    }));
+  }
+
+  Future<void> fetchTotalWarnings() async {
+    try {
+      int warningCount = await issueWarningService.fetchWarningCount();  // Assuming fetchWarningCount is in WarningService
+      setState(() {
+        numberOfWarnings = warningCount.toString();
+      });
+    } catch (error) {
+      setState(() {
+        numberOfWarnings = "0";
+      });
+      print("Error fetching warning count: $error");
+    }
   }
 
   @override
@@ -117,7 +154,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 MetricSection(title: "Number of Reports", value: numberOfReports, imageName: Icons.report),
-                MetricSection(title: "Number of Warnings", value: "0", imageName: Icons.warning),
+                MetricSection(title: "Number of Warnings", value: numberOfWarnings, imageName: Icons.warning),
               ],
             ),
             Divider(),
