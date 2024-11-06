@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/AdminPanel/adminusermanage.dart';
 import 'package:socialtrailsapp/Adminpanel/adminpostmanage.dart';
+import 'package:socialtrailsapp/FollowersList.dart';
+import 'package:socialtrailsapp/FollowingsList.dart';
 import 'package:socialtrailsapp/Interface/OperationCallback.dart';
 import 'package:socialtrailsapp/Utility/SessionManager.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
@@ -245,14 +248,37 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
                     ],
                   ),
                   SizedBox(width: 15),
-                  ProfileStat(count: postsCount.toString(), label: 'Posts'),
+                  ProfileStat(
+                    count: postsCount.toString(),
+                    label: 'Posts',
+                    onTap: () {}, // No action needed for Posts
+                  ),
                   SizedBox(width: 15),
-                  ProfileStat(count: followersCount.toString(), label: 'Followers'),
+                  ProfileStat(
+                    count: followersCount.toString(),
+                    label: 'Followers',
+                    onTap: () {
+                      // Navigate to FollowersList when tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FollowersList(userId: widget.userId)),
+                      );
+                    },
+                  ),
                   SizedBox(width: 15),
-                  ProfileStat(count: followingsCount.toString(), label: 'Followings'),
+                  ProfileStat(
+                    count: followingsCount.toString(),
+                    label: 'Followings',
+                    onTap: () {
+                      // Navigate to FollowingsList when tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FollowingsList(userId: widget.userId)),
+                      );
+                    },
+                  ),
                 ],
               ),
-              SizedBox(height: 2),
               UserDetailText(label: user?.bio ?? ''),
               UserDetailText(label: user?.email ?? ''),
               SizedBox(height: 5),
@@ -352,29 +378,6 @@ class _AdminUserDetailManageScreenState extends State<AdminUserDetailManageScree
   }
 }
 
-class ProfileStat extends StatelessWidget {
-  final String count;
-  final String label;
-
-  ProfileStat({required this.count, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          count,
-          style: TextStyle(fontSize: 18, color: Colors.black),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 18, color: Colors.black),
-        ),
-      ],
-    );
-  }
-}
 
 class UserDetailText extends StatelessWidget {
   final String label;
@@ -405,6 +408,32 @@ class UserDetailText extends StatelessWidget {
   }
 }
 
+class ProfileStat extends StatelessWidget {
+  final String count;
+  final String label;
+  final VoidCallback onTap;
+
+  ProfileStat({required this.count, required this.label,required this.onTap,});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,  // Attach the onTap callback to GestureDetector
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: TextStyle(fontSize: 16),
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+}
 class ProfileButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
@@ -430,4 +459,3 @@ class ProfileButton extends StatelessWidget {
 
   }
 }
-
