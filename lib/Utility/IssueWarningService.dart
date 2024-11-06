@@ -1,8 +1,10 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:socialtrailsapp/Interface/DataOperationCallback.dart';
 import 'package:socialtrailsapp/Utility/UserService.dart';
 import 'package:socialtrailsapp/ModelData/IssueWarning.dart';
 import 'package:socialtrailsapp/ModelData/Users.dart';
 import 'package:socialtrailsapp/Interface/IIssueWarning.dart';
+import 'package:socialtrailsapp/Interface/DataOperationCallback.dart';
 
 class IssueWarningService implements IIssueWarning {
   final DatabaseReference _reference = FirebaseDatabase.instance.ref();
@@ -29,49 +31,41 @@ class IssueWarningService implements IIssueWarning {
 
   // Method to fetch warnings from Firebase
   @override
-  Future<List<IssueWarning>> fetchWarnings() async {
+  Future<void> fetchWarnings(DataOperationCallback<List<IssueWarning>> callback) async {
     try {
-      DataSnapshot snapshot = await _reference.child(_collectionName).get();
-      if (snapshot.exists) {
-        final warningDicts = snapshot.value as Map<dynamic, dynamic>;
-        List<IssueWarning> warnings = [];
+      final DatabaseEvent event = await _reference.once();
+      final DataSnapshot snapshot = event.snapshot;
 
-        // Iterate over each warning in the collection
-        for (var warningId in warningDicts.keys) {
-          var warningData = warningDicts[warningId];
+      if (snapshot.exists && snapshot.children.isNotEmpty) {
+        List<IssueWarning> warningsList = [];
 
-          // Ensure we get a Map<String, dynamic> for each warning
-          if (warningData is Map<String, dynamic>) {
+        for (DataSnapshot dataSnapshot in snapshot.children) {
+          if (dataSnapshot.value is Map) {
+            final Map<dynamic, dynamic> mapValue = dataSnapshot.value as Map<dynamic, dynamic>;
+            Map<String, dynamic> warningData = mapValue.map((key, value) => MapEntry(key.toString(), value));
+
+            // Use 'fromMap' to create an IssueWarning instance
             IssueWarning warning = IssueWarning.fromMap(warningData);
-            warning.issuewarningId = warningId;
+            warning.issuewarningId = dataSnapshot.key;
 
-            warnings.add(warning);
+            Users? userDetails = await getUserDetails(warning.issuewarnto);
+            warning.username = userDetails?.username ?? "Unknown";
+            warning.userprofilepicture = userDetails?.profilepicture;
+
+            warningsList.add(warning);
           }
         }
-        return warnings;
+
+        // Notify success via callback
+        callback.onSuccess(warningsList);
       } else {
-        print("No data exists in Firebase under 'issuewarning'");
-        return []; // Return an empty list if no data
+        callback.onFailure("No warnings found.");
       }
-    } catch (error) {
-      print("Error fetching warnings: $error");
-      throw Exception('Failed to fetch warnings: $error');
+    } catch (e) {
+      callback.onFailure("Error fetching warnings: ${e.toString()}");
     }
   }
 
-  // Method to retrieve user details
-  Future<Users> retrieveUserDetails(String userId) async {
-    try {
-      var userDetails = await userService.getUserByID(userId);
-      if (userDetails == null) {
-        throw Exception('User details not found for userId: $userId');
-      }
-      return userDetails;
-    } catch (error) {
-      print("Error retrieving user details: $error");
-      throw Exception('Error retrieving user details: $error');
-    }
-  }
 
   // Method to fetch the count of all warnings
   @override
@@ -83,5 +77,10 @@ class IssueWarningService implements IIssueWarning {
       print("Error fetching warning count: $error");
       throw Exception('Failed to fetch warning count: $error');
     }
+  }
+
+  Future<Users?> getUserDetails(String userId) async {
+    Users? user = await userService.getUserByID(userId);
+    return user;
   }
 }
