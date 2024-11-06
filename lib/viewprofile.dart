@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:socialtrailsapp/FollowersList.dart';
+import 'package:socialtrailsapp/FollowingsList.dart';
 import 'package:socialtrailsapp/userpostdetail.dart';
 import 'Interface/DataOperationCallback.dart';
 import 'ModelData/PostImageData.dart';
@@ -16,9 +18,11 @@ class ViewProfileScreen extends StatefulWidget {
 
 class _ViewProfileScreenState extends State<ViewProfileScreen> {
   List<PostImageData> _postImages = [];
+  String currentUserId = SessionManager().getUserID() ?? "";
   int postsCount = 0;
   int followersCount = 0;
   int followingsCount = 0;
+
 
   @override
   void initState() {
@@ -33,15 +37,17 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     String userId = SessionManager().getUserID() ?? '';
     UserPostService userPostService = UserPostService();
 
-    await userPostService.getAllUserPost(userId, DataOperationCallback<List<UserPost>>(
+    await userPostService.getAllUserPost(
+        userId, DataOperationCallback<List<UserPost>>(
       onSuccess: (posts) {
         setState(() {
           _postImages = posts
               .where((post) => post.uploadedImageUris?.isNotEmpty == true)
-              .map((post) => PostImageData(
-            postId: post.postId ?? '',
-            imageUrl: post.uploadedImageUris![0],
-          ))
+              .map((post) =>
+              PostImageData(
+                postId: post.postId ?? '',
+                imageUrl: post.uploadedImageUris![0],
+              ))
               .toList();
           postsCount = _postImages.length;
         });
@@ -91,7 +97,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   }
 
 
-
   @override
   Widget build(BuildContext context) {
     String? imageUrl = SessionManager().getImageUrl();
@@ -114,16 +119,43 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                     SizedBox(height: 5),
                     Text(
                       SessionManager().getUsername() ?? 'Unknown User',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 SizedBox(width: 15),
-                _buildStatColumn(postsCount, "Posts"),
+                ProfileStat(
+                  count: postsCount.toString(), label: 'Posts', onTap: () {},),
+                // Updated to show actual post count
                 SizedBox(width: 15),
-                _buildStatColumn(followersCount, "Followers"),
+                ProfileStat(
+                  count: followersCount.toString(),
+                  label: 'Followers',
+                  onTap: () {
+                    // Navigate to FollowersList when tapped
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) =>
+                          FollowersList(userId: currentUserId,)),
+                    );
+                  },
+                ),
                 SizedBox(width: 15),
-                _buildStatColumn(followingsCount, "Followings"),
+                ProfileStat(
+                  count: followingsCount.toString(),
+                  label: 'Followings',
+                  onTap: () {
+                    // Navigate to FollowingsList when tapped
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) =>
+                          FollowingsList(userId: currentUserId)),
+                    );
+                  },
+                ),
+
+
               ],
             ),
             SizedBox(height: 10),
@@ -139,7 +171,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(currentIndex: 4, onTap: (index) {}),
+                      builder: (context) =>
+                          EditProfileScreen(currentIndex: 4, onTap: (index) {}),
                     ),
                   );
                 },
@@ -148,7 +181,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                child: Text('Edit Profile', style: TextStyle(color: Colors.white)),
+                child: Text(
+                    'Edit Profile', style: TextStyle(color: Colors.white)),
               ),
             ),
             SizedBox(height: 10),
@@ -167,7 +201,9 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => UserPostDetailScreen(postDetailId: _postImages[index].postId),
+                          builder: (context) =>
+                              UserPostDetailScreen(
+                                  postDetailId: _postImages[index].postId),
                         ),
                       );
                     },
@@ -190,19 +226,32 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       ),
     );
   }
-
-  Widget _buildStatColumn(int count, String label) {
-    return Column(
-      children: [
-        Text(
-          count.toString(),
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-      ],
-    );
-  }
 }
+
+
+  class ProfileStat extends StatelessWidget {
+  final String count;
+  final String label;
+  final VoidCallback onTap;
+
+  ProfileStat({required this.count, required this.label,required this.onTap,});
+
+  @override
+  Widget build(BuildContext context) {
+  return GestureDetector(
+  onTap: onTap, // Attach the onTap callback to GestureDetector
+  child: Column(
+  children: [
+  Text(
+  count,
+  style: TextStyle(fontSize: 16),
+  ),
+  Text(
+  label,
+  style: TextStyle(fontSize: 16),
+  ),
+  ],
+  ),
+  );
+  }
+  }
