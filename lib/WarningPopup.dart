@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/ModelData/IssueWarning.dart';
 import 'package:socialtrailsapp/Utility/IssueWarningService.dart';
 import 'package:socialtrailsapp/Utility/NotificationService.dart';
+import 'package:socialtrailsapp/Utility/SessionManager.dart';
+
+import 'ModelData/Notification.dart';
 
 class WarningPopup extends StatefulWidget {
   final bool isPresented;
@@ -118,7 +121,7 @@ class _WarningPopupState extends State<WarningPopup> {
     }
 
     // Assuming you have a method to get the current user
-    String currentUser = 'Admin'; // Replace with the actual user
+    String currentUser = SessionManager().getUsername() ?? "Admin";
     IssueWarning warning = IssueWarning(
       issuewarnby: currentUser,
       issuewarnto: widget.issueWarnto,
@@ -131,16 +134,15 @@ class _WarningPopupState extends State<WarningPopup> {
       // Now the addWarning method can be awaited since _submitWarning is async
       await IssueWarningService().addWarning(warning);
 
-      // // Send notification on success
-      // NotificationService().sendNotificationToUser(
-      //   Notification(
-      //     notifyto: widget.issueWarnto,
-      //     notifyBy: currentUser,
-      //     type: widget.warningType,
-      //     message: warningReason,
-      //     relatedId: widget.issueWarnId,
-      //   ),
-      // );
+      // Send notification on success
+      NotificationModal notification = NotificationModal(
+        notifyto: widget.issueWarnto,
+        notifyBy: SessionManager().getUserID() ?? "",
+        type: widget.warningType,
+        message: warningReason,
+        relatedId: widget.issueWarnId,
+      );
+      await NotificationService().sendNotificationToUser(notification);
 
       setState(() {
         alertMessage = 'Warning submitted successfully!';

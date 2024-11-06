@@ -13,6 +13,8 @@ import '../Interface/DataOperationCallback.dart';
 import '../ModelData/UserPost.dart';
 import '../Utility/UserPostService.dart';
 import '../Utility/Utils.dart';
+import 'ModelData/Notification.dart';
+import 'Utility/NotificationService.dart';
 
 class FollowUnfollowView extends StatefulWidget {
 
@@ -123,47 +125,51 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
   }
 
   Future<void> _checkPendingforFollowingUser(String userIdToCheck) async {
-
     try {
+
       bool isPending = await followService.checkPendingForFollowingUser(currentUserId, userIdToCheck);
 
       setState(() {
         showConfirmationButtons = isPending;
         isFollowUnFollow = false;
-        showConfirmationButtons = true;
-
       });
+
 
       if (!isPending) {
         _checkFollowBack(userIdToCheck);
       } else {
-        print("haspending true");
+
+        print("has pending follow request, not checking follow back");
       }
     } catch (error) {
+
       setState(() {
         showConfirmationButtons = false;
       });
-      print("haspending false");
+      print("Error checking pending follow: $error");
+
+
       _checkFollowBack(userIdToCheck);
     }
   }
 
 
-    void _checkFollowBack(String userIdToCheck) async {
+
+
+  void _checkFollowBack(String userIdToCheck) async {
       String currentUserId = this.currentUserId;
 
-      // Check if the current user is following the user to check
       try {
         bool isFollowing = await followService.checkIfFollowed(currentUserId,widget.userIdToFollow);
 
+        print("is following : $isFollowing" );
         if (isFollowing) {
           setState(() {
             this.isFollowedBack = true;
           });
 
-          // Check if the user to check follows the current user back
-          bool isFollowedBack = await followService.checkIfFollowed(currentUserId,widget.userIdToFollow);
-
+          bool isFollowedBack = await followService.checkIfFollowed(widget.userIdToFollow,currentUserId);
+          print("is followed back : $isFollowedBack" );
           if (isFollowedBack) {
             setState(() {
               this.isFollowedBack = false;
@@ -171,9 +177,9 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
             updateUIForUnfollowButton();
           }
         } else {
-          // Current user is not following, check if the user to check follows back
-          bool isFollowedBack = await followService.checkIfFollowed(currentUserId,widget.userIdToFollow);
 
+          bool isFollowedBack = await followService.checkIfFollowed(widget.userIdToFollow,currentUserId);
+          print("in esel is following : $isFollowedBack" );
           if (isFollowedBack) {
             updateUIForUnfollowButton();
           } else {
@@ -195,7 +201,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
         isPendingRequest = true;
       });
 
-      // sendNotification(userIdToFollow, " has sent a follow request to you", currentUserId);
+      _sendNotifications( widget.userIdToFollow, " has sent a follow request to you", currentUserId);
       alertMessage = "Follow request sent!";
       showingAlert = true;
     } catch (error) {
@@ -220,7 +226,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
       showFollowButton();
 
 
-      // sendNotification(userIdToUnfollow, " has canceled the follow request", currentUserId);
+      _sendNotifications(widget.userIdToFollow, " has canceled the follow request", currentUserId);
       alertMessage = "Follow request canceled!";
       showingAlert = true;
     } catch (error) {
@@ -249,13 +255,8 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
         showingAlert = true;
         alertMessage = "Follow request confirmed!";
       });
+      _sendNotifications(widget.userIdToFollow,'has started following you',currentUserId);
 
-      // Send the notification
-      // followService.sendNotify(
-      //   notifyTo: widget.userId,
-      //   text: 'has started following you',
-      //   notifyBy: currentUserId,
-      // );
     } catch (error) {
       setState(() {
         alertMessage = "Error: ${error.toString()}";
@@ -280,13 +281,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
         showConfirmationButtons = false;
 
       });
-
-      // Send notification that the user rejected the follow request
-      // await followService.sendNotify(
-      //   notifyTo: widget.userId,        // The user who sent the request
-      //   text: 'has rejected your follow request',
-      //   notifyBy: currentUserId,        // The user who rejected the request
-      // );
+      _sendNotifications(widget.userIdToFollow,'has rejected your follow request',currentUserId);
 
       showFollowButton();
     } catch (error) {
@@ -311,7 +306,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
       alertMessage = "You have successfully unfollowed the user";
       showingAlert = true;
       showFollowButton();
-
+      _sendNotifications(widget.userIdToFollow,'has unfollowed you',currentUserId);
       // sendNotify(notifyTo: widget.userIdToFollow, text: " has unfollowed you", notifyBy: currentUserId);
 
     } catch (error) {
@@ -334,6 +329,7 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
         showingAlert = true;
 
         updateUIForUnfollowButton();
+        _sendNotifications(widget.userIdToFollow,'has started following you',currentUserId);
      //   sendNotify(notifyTo: userId, text: " has started following you", notifyBy: currentUserId);
       } catch (error) {
 
@@ -356,6 +352,19 @@ class _FollowUnfollowViewState extends State<FollowUnfollowView> {
       isFollowing = false;
     });
   }
+
+  Future<void> _sendNotifications(String notifyTo,String text,String notifyBy) async {
+    NotificationModal notification = NotificationModal(
+      notifyto: notifyTo,
+      notifyBy: notifyBy,
+      type: "follow",
+      message: text,
+      relatedId: notifyBy,
+    );
+    await NotificationService().sendNotificationToUser(notification);
+  }
+
+
 
 
   Future<void> _fetchUserPosts(String userId) async {

@@ -54,7 +54,8 @@ class NotificationService implements INotification {
           // Fetch user details for each notification
           try {
             final userDetails = await retrieveUserDetails(notification.notifyBy);
-            notification.username = userDetails?.username ?? "";
+            notification.username = userDetails?.username ?? "Warning issue by admin : ";
+            print("notification name : ${ notification.username }");
             notification.userProfilePicture = userDetails?.profilepicture ?? "";
           } catch (e) {
             print("Failed to fetch user details: ${e.toString()}");

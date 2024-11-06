@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:socialtrailsapp/Adminpanel/adminpostmanage.dart';
 import 'package:socialtrailsapp/ModelData/Report.dart';
 import 'package:socialtrailsapp/Utility/ReportService.dart';
+import 'package:socialtrailsapp/Utility/UserPostService.dart';
 import '../AdminPanel/adminusermanage.dart';
 import '../ModelData/ReportType.dart';
 import '../Interface/DataOperationCallback.dart';
 import 'package:socialtrailsapp/WarningPopup.dart';
+
+import '../ModelData/UserPost.dart';
 
 class AdminReportListScreen extends StatefulWidget {
   @override
@@ -53,6 +56,21 @@ class _AdminReportListScreenState extends State<AdminReportListScreen> {
       _issueWarnto = issueWarnto;
       _warningType = warningType;
     });
+
+    if (warningType == 'post') {
+      UserPostService().getUserPostDetailById(issueWarnId, DataOperationCallback<UserPost>(
+        onSuccess: (userPost) {
+
+          setState(() {
+            _issueWarnto = userPost.userId;
+          });
+        },
+        onFailure: (error) {
+          print('Failed to fetch user post details: $error');
+        },
+      ));
+    }
+
   }
 
   @override
@@ -141,7 +159,7 @@ class _AdminReportListScreenState extends State<AdminReportListScreen> {
           IconButton(
             icon: Icon(Icons.warning, color: Colors.black), // Warning icon
             onPressed: () {
-              _showWarningPopup(report.reportedid, report.username ?? "Unknown", report.reporttype);
+              _showWarningPopup(report.reportedid, report.reportedid ?? "Unknown", report.reporttype);
             },
           ),
         ],

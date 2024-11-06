@@ -56,14 +56,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 itemBuilder: (context, index) {
                   NotificationModal notification = notifications[index];
                   return ListTile(
-                    leading:  Container(
+                    leading:   Container(
                       width: 40,
                       height: 40,
                       child: CircleAvatar(
-                        backgroundImage: NetworkImage(notification.userProfilePicture ?? 'assets/user.png'),
+                        radius: 40,
+                        backgroundImage: (notification.userProfilePicture != null && notification.userProfilePicture!.isNotEmpty)
+                            ? NetworkImage(notification.userProfilePicture!)
+                            : AssetImage('assets/user.png') as ImageProvider,
                       ),
                     ),
-                    title: Text('${notification.username ?? ""}${notification.message}'),
+                    title: Text('${notification.username ??  "Warning issue by admin : "}${notification.message}'),
                     onTap: () {
                       if (notification.type.toLowerCase() == "post") {
                         Navigator.push(
