@@ -5,6 +5,7 @@ import 'ModelData/PostImageData.dart';
 import 'ModelData/UserPost.dart';
 import 'Utility/SessionManager.dart';
 import 'Utility/UserPostService.dart';
+import 'package:socialtrailsapp/Utility/FollowService.dart';
 import 'editprofile.dart';
 
 
@@ -22,7 +23,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   @override
   void initState() {
     super.initState();
+
     _fetchUserPosts();
+    _fetchFollowersCount();
+    _fetchFollowingsCount();
   }
 
   Future<void> _fetchUserPosts() async {
@@ -47,6 +51,46 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       },
     ));
   }
+
+
+  Future<void> _fetchFollowersCount() async {
+    String userId = SessionManager().getUserID() ?? '';
+    FollowService followService = FollowService();
+
+    await followService.getFollowersCount(
+        userId,
+            (count, errorMessage) {
+          if (errorMessage == null) {
+            setState(() {
+              followersCount = count;
+            });
+          } else {
+            print("Error fetching followers count: $errorMessage");
+          }
+        }
+    );
+  }
+
+  // Fetch followings count
+  Future<void> _fetchFollowingsCount() async {
+    String userId = SessionManager().getUserID() ?? '';
+    FollowService followService = FollowService();
+
+    await followService.getFollowingsCount(
+        userId,
+            (count, errorMessage) {
+          if (errorMessage == null) {
+            setState(() {
+              followingsCount = count;
+            });
+          } else {
+            print("Error fetching followings count: $errorMessage");
+          }
+        }
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
