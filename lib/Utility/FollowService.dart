@@ -177,7 +177,7 @@ class FollowService implements IFollowService {
       final snapshot = await reference
           .child(_collectionName)
           .orderByChild("userId")
-          .equalTo(currentUserId)
+          .equalTo(userIdToCheck)
           .once();
 
       if (snapshot.snapshot.value != null) {
@@ -188,7 +188,7 @@ class FollowService implements IFollowService {
         final followingIds = userFollow["followingIds"] as Map<dynamic, dynamic>?;
 
         // Check if the userToCheck is present in followingIds and has a 'false' value (indicating a pending follow)
-        if (followingIds != null && followingIds.containsKey(userIdToCheck) && followingIds[userIdToCheck] == false) {
+        if (followingIds != null && followingIds.containsKey(currentUserId) && followingIds[currentUserId] == false) {
           return true;  // There's a pending follow request
         }
       }
@@ -229,8 +229,8 @@ class FollowService implements IFollowService {
 
           // Use named parameters when calling addFollowers
           await addFollowers(
-            currentUserId: currentUserId,
-            userIdToFollow: userIdToFollow,
+            currentUserId: userIdToFollow,
+            userIdToFollow: currentUserId,
           );
 
           print('Follow request confirmed');
@@ -344,7 +344,7 @@ class FollowService implements IFollowService {
     try {
       // Query the database to find the user record associated with currentUserId
       final followRef = reference.child(_collectionName);
-      final snapshot = await followRef.orderByChild("userId").equalTo(currentUserId).once();
+      final snapshot = await followRef.orderByChild("userId").equalTo(userIdToCheck).once();
 
       if (snapshot.snapshot.value != null) {
         // Extract the user data from the snapshot
@@ -355,7 +355,7 @@ class FollowService implements IFollowService {
         final followingIds = userFollow["followingIds"] as Map<dynamic, dynamic>?;
 
         // Check if the userIdToCheck exists in followingIds
-        if (followingIds != null && followingIds.containsKey(userIdToCheck) && followingIds[userIdToCheck] == true) {
+        if (followingIds != null && followingIds.containsKey(currentUserId) && followingIds[currentUserId] == true) {
           // User is following the userIdToCheck
           return true;
         }
