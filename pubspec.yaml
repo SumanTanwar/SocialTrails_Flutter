@@ -43,6 +43,7 @@ dependencies:
   google_maps_flutter: any
   google_places_flutter: any
   permission_handler: any
+  provider: any
 
 
 

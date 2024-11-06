@@ -5,7 +5,7 @@ import 'package:socialtrailsapp/Utility/ReportService.dart';
 import '../AdminPanel/adminusermanage.dart';
 import '../ModelData/ReportType.dart';
 import '../Interface/DataOperationCallback.dart';
-
+import 'package:socialtrailsapp/WarningPopup.dart';
 
 class AdminReportListScreen extends StatefulWidget {
   @override
@@ -15,6 +15,11 @@ class AdminReportListScreen extends StatefulWidget {
 class _AdminReportListScreenState extends State<AdminReportListScreen> {
   final ReportService reportService = ReportService();
   List<Report> reportsWithUserInfo = [];
+
+  bool _isPopupVisible = false;
+  String _issueWarnId = '';
+  String _issueWarnto = '';
+  String _warningType = '';
 
   @override
   void initState() {
@@ -41,6 +46,14 @@ class _AdminReportListScreenState extends State<AdminReportListScreen> {
     ));
   }
 
+  void _showWarningPopup(String issueWarnId, String issueWarnto, String warningType) {
+    setState(() {
+      _isPopupVisible = true;
+      _issueWarnId = issueWarnId;
+      _issueWarnto = issueWarnto;
+      _warningType = warningType;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +70,24 @@ class _AdminReportListScreenState extends State<AdminReportListScreen> {
           return reportRow(reportsWithUserInfo[index]);
         },
       ),
+
+      // Show the WarningPopup if the flag is set to true
+      floatingActionButton: _isPopupVisible
+          ? WarningPopup(
+        isPresented: _isPopupVisible,
+        issueWarnId: _issueWarnId,
+        issueWarnto: _issueWarnto,
+        warningType: _warningType,
+        onDismiss: (bool success) {
+          setState(() {
+            _isPopupVisible = false;
+          });
+        },
+      )
+          : Container(),
+
+
+
     );
   }
 
@@ -81,28 +112,39 @@ class _AdminReportListScreenState extends State<AdminReportListScreen> {
           Text("Status: ${report.status}", style: TextStyle(color: Colors.grey)),
         ],
       ),
-      trailing: IconButton(
-        icon: Icon(Icons.visibility, color: Colors.blue),
-        onPressed: () {
-          if (report.reporttype == ReportType.post.getType()) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminPostDetailScreen(postId: report.reportedid),
-              ),
-            );
-          } else if (report.reporttype == ReportType.user.getType()) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminUserDetailManageScreen(userId: report.reportedid),
-              ),
-            );
-          } else {
-            // Handle invalid report type
-            print("No valid action for this report type");
-          }
-        },
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.visibility, color: Colors.black),
+            onPressed: () {
+              if (report.reporttype == ReportType.post.getType()) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdminPostDetailScreen(postId: report.reportedid),
+                  ),
+                );
+              } else if (report.reporttype == ReportType.user.getType()) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdminUserDetailManageScreen(userId: report.reportedid),
+                  ),
+                );
+              } else {
+                // Handle invalid report type
+                print("No valid action for this report type");
+              }
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.warning, color: Colors.black), // Warning icon
+            onPressed: () {
+              _showWarningPopup(report.reportedid, report.username ?? "Unknown", report.reporttype);
+            },
+          ),
+        ],
       ),
     );
   }
